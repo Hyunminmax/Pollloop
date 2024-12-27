@@ -79,3 +79,5 @@
 
 <p><strong>예시</strong>:</p>
 <pre><code>feat: 사용자 인증 API 구현
+
+<p>test</p>
