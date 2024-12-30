@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 from dotenv import dotenv_values
 
+
 # env 파일 로드
 ENV = dotenv_values(".env")
 
@@ -102,6 +103,7 @@ DATABASES = {
     }
 }
 
+AUTH_USER_MODEL = "user.CustomUser"
 
 
 # Password validation
