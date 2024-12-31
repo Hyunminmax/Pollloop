@@ -24,6 +24,7 @@ class Form(models.Model):
 class Respondent(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     form = models.ForeignKey(Form, on_delete=models.CASCADE)
+    is_complete = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'respondent'
