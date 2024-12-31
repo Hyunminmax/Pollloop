@@ -57,7 +57,17 @@ class Questions(models.Model):
 # 보기
 class OptionsOfQuestions(models.Model):
     question = models.ForeignKey(Questions, on_delete=models.CASCADE)
+    # 아래 예시와 같이 받기 위해 수정
+    option_number = models.CharField(max_length=2)
     option_context = models.CharField(max_length=255)
+# [
+#     {
+#         'option_number': 1, 'option_context': 'asdflkjsadfj',
+#         'option_number': 2, 'option_context': 'asdflkjsadfj',
+#         'option_number': 3, 'option_context': 'asdflkjsadfj',
+#         'option_number': 4, 'option_context': 'asdflkjsadfj',
+#     }
+# ]
 
     class Meta:
         db_table = 'options_of_questions'
