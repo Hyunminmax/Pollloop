@@ -3,7 +3,12 @@ from django.http import JsonResponse
 from django.utils import timezone
 from django.views import View
 from .models import Form, Respondent, Questions, OptionsOfQuestions, MultipleAnswers, SubjectiveAnswers
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from .serializers import FormSerializer
 
+class FormCreateView(APIView):
+    serializer_class = FormSerializer
 
 class FormParticipantsView(View):
     def get(self, request, form_id):
