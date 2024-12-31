@@ -58,7 +58,7 @@ class Questions(models.Model):
 class OptionsOfQuestions(models.Model):
     question = models.ForeignKey(Questions, on_delete=models.CASCADE)
     # 아래 예시와 같이 받기 위해 수정
-    option_number = models.CharField(max_length=2)
+    option_number = models.CharField(max_length=2, default=0)
     option_context = models.CharField(max_length=255)
 # [
 #     {
