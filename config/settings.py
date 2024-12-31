@@ -38,6 +38,9 @@ CUSTOM_APPS = [
     'ask',
     'form',
     'user',
+    'rest_framework',
+    'drf_spectacular',
+    'drf_spectacular_sidecar',
 ]
 
 SYSTEM_APPS = [
