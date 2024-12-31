@@ -41,6 +41,7 @@ CUSTOM_APPS = [
     'rest_framework',
     'drf_spectacular',
     'drf_spectacular_sidecar',
+    'django_seed',
 ]
 
 SYSTEM_APPS = [
@@ -137,7 +138,7 @@ TIME_ZONE = 'Asia/Seoul'
 
 USE_I18N = True
 
-USE_TZ = True
+USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)
