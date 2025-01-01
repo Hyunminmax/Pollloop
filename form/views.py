@@ -5,10 +5,30 @@ from django.views import View
 from .models import Form, Respondent, Questions, OptionsOfQuestions, MultipleAnswers, SubjectiveAnswers
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework import status
 from .serializers import FormSerializer
 
 class FormCreateView(APIView):
-    serializer_class = FormSerializer
+    def post(self, request, *args, **kwargs):
+        serializer = FormSerializer(data=request.data)
+        if serializer.is_valid():
+            #serializer의 create 실행
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.error, status=status.HTTP_400_BAD_REQUEST)
+
+class FormView(APIView):
+    def get(self, request, *args, **kwargs):
+        form_uuid = request.query_params.get('uuid')
+        if not form_uuid:
+            return Response({'error':'Form uuid is required'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            form = Form.objects.get(uuid=form_uuid)
+        except Form.DoesNotExist:
+            return Response({'error':'Form not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = FormSerializer(form)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class FormParticipantsView(View):
     def get(self, request, form_id):
