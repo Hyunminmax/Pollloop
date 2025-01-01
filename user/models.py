@@ -7,8 +7,8 @@ class CustomUser(AbstractUser):
     # 기존 AbstractUser의 필드들을 유지하면서 확장
     email = models.EmailField(unique=True)  # EMAIL을 고유 식별자로 설정
     username = models.CharField(max_length=150, unique=True)  # username 필드 사용
-    first_name = models.CharField(max_length=30, blank=True)  # 기본 필드 유지
-    last_name = models.CharField(max_length=30, blank=True)  # 기본 필드 유지
+    first_name = None
+    last_name = None
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(default=timezone.now)
