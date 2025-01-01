@@ -51,12 +51,13 @@ class FormSerializer(serializers.ModelSerializer):
         questions_data = validated_data.pop('questions', [])
         form = Form.objects.create(**validated_data)
         # 질문 생성
-        for quesiton_data in questions_data:
-            options_data = questions_data.pop('options_of_questions', [])
-            question = Questions.objects.create(form=form, **questions_data)
+        for question_data in questions_data:
+            options_data = question_data.pop('options_of_questions', [])
+            question = Questions.objects.create(form=form, **question_data)
             # 보기 생성
             for option_data in options_data:
-                OptionsOfQuestions.objects.create(question=question, **options_data)
+                OptionsOfQuestions.objects.create(question=question, **option_data)
+            
         return form
         
     def update(self, instance, validated_data):

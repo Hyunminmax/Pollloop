@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import FormSerializer
+from uuid import UUID
 
 ############현민############
 class FormCreateView(APIView):
@@ -16,11 +17,12 @@ class FormCreateView(APIView):
             #serializer의 create 실행
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.error, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class FormView(APIView):
-    def get(self, request, *args, **kwargs):
-        form_uuid = request.query_params.get('uuid')
+    def get(self, request, uuid):
+        
+        form_uuid = UUID(uuid)
         if not form_uuid:
             return Response({'error':'Form uuid is required'}, status=status.HTTP_400_BAD_REQUEST)
         try:
