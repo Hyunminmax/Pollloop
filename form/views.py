@@ -2,12 +2,13 @@ from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from django.utils import timezone
 from django.views import View
-from .models import Form, Respondent, Questions, OptionsOfQuestions, MultipleAnswers, SubjectiveAnswers
+from .models import Form, Respondent, Questions, OptionsOfQuestions, MultipleAnswers, SubjectiveAnswers, Statistics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import FormSerializer
 
+############현민############
 class FormCreateView(APIView):
     def post(self, request, *args, **kwargs):
         serializer = FormSerializer(data=request.data)
@@ -30,6 +31,9 @@ class FormView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+
+
+############명현############
 class FormParticipantsView(View):
     def get(self, request, form_id):
         form = get_object_or_404(Form, id=form_id)
@@ -88,7 +92,14 @@ class FormActionView(View):
         return JsonResponse({'status': 'success', 'message': message})
 
 
+'''
+통계에서 각 질문당 몇번 답변 내용에 대한 data 보여주고
+주관식의 경우 답변내용 전체 data보여주기
+'''
 # Form 요약
 class FormDetailView(View):
     def get(self, request, form_id):
         form = get_object_or_404(Form, id=form_id)
+        multiple_answer = get_object_or_404(MultipleAnswers, options_of_question__question__form=form)
+        answer = Statistics.objects.filter(id=OptionsOfQuestions, options_of_question__statistics__count=request.count)
+        questions = Questions.objects.filter(form=form)
