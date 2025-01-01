@@ -49,6 +49,7 @@ class Questions(models.Model):
     form = models.ForeignKey(Form, on_delete=models.CASCADE)
     layout_type = models.CharField(choices=LAYOUT_CHOICES, max_length=255)
     question = models.TextField()
+    question_order = models.IntegerField()
     is_required = models.BooleanField(default=False)
 
     class Meta:
