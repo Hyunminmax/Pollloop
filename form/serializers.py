@@ -22,6 +22,7 @@ class QuestionsSerializer(serializers.ModelSerializer):
         fields = [
             'layout_type', 
             'question', 
+            'question_order',
             'is_required', 
             'options_of_questions'
             ]
