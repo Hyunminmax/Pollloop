@@ -21,7 +21,6 @@ class FormCreateView(APIView):
 
 class FormView(APIView):
     def get(self, request, uuid):
-        
         form_uuid = UUID(uuid)
         if not form_uuid:
             return Response({'error':'Form uuid is required'}, status=status.HTTP_400_BAD_REQUEST)
