@@ -128,6 +128,21 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Swagger settings
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    # JWT 토큰 활성화 후 적용
+    # 'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework_simplejwt.authentication.JWTAuthentication',],
+    # 'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticated',],
+}
+# Swagger settings
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Pollloop',
+    'DESCRIPTION': '폼!폼! 뿌린!',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,  # 스키마 엔드포인트를 포함하지 않도록 설정
+}   # '/api/schema/' 숨김처리
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
