@@ -25,10 +25,12 @@ class FormView(APIView):
         if not form_uuid:
             return Response({'error':'Form uuid is required'}, status=status.HTTP_400_BAD_REQUEST)
         try:
-            form = Form.objects.get(uuid=form_uuid)
+            form = Form.objects.prefetch_related('questions_set__optionsofquestions_set').get(uuid=form_uuid)
         except Form.DoesNotExist:
-            return Response({'error':'Form not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'Form not found'}, status=status.HTTP_404_NOT_FOUND)
+        
         serializer = FormSerializer(form)
+        
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
