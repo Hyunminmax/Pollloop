@@ -15,7 +15,7 @@ class OptionsOfQuestionsSerializer(serializers.ModelSerializer):
 # 질문 시리얼라이저
 class QuestionsSerializer(serializers.ModelSerializer):
     # OptionsOfQuestions와 관계 설정 Question은 여러개의 Options를 가질수 있지만 필수는 아니다.
-    options_of_questions = OptionsOfQuestionsSerializer(many=True, required=False, source='options_of_questions_set')
+    options_of_questions = OptionsOfQuestionsSerializer(many=True, required=False, source='optionsofquestions_set')
 
     class Meta:
         model = Questions
