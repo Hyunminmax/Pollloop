@@ -3,7 +3,7 @@ from .settings_base import *
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["43.200.4.154"]
+ALLOWED_HOSTS = ["43.200.4.153"]
 
 
 # # 보안 설정 추가
