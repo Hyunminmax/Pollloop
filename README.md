@@ -62,6 +62,8 @@
     <li><code>feature/*</code>: 기능 개발 브랜치</li>
     <li><code>hotfix/*</code>: 긴급 버그 수정 브랜치</li>
 </ul>
+</code>
+</pre>
 
 <h3>커밋 메시지 컨벤션</h3>
 <pre><code>type: subject
@@ -78,4 +80,112 @@
 </ul>
 
 <p><strong>예시</strong>:</p>
-<pre><code>feat: 사용자 인증 API 구현
+<pre><code>feat: 사용자 인증 API 구현</code></pre>
+</code>
+</pre>
+<h2>ChangeLog</h2>
+<details>  
+    <summary><strong>1,2,3주차(24/12/18 - 25/01/03)</strong></summary>
+<details>  
+  <summary><strong>[김명현]</strong></summary>
+  
+  ### ✅ Done
+  
+  - 구현한 내용
+    - 세부 사항
+    - 세부 사항
+  
+  ### ⚙️ in Progress
+  
+  - 구현 중인 내용
+    - 세부 사항
+    - 세부 사항
+        
+  ### 📚 Next
+  
+  - 구현 예정
+    - 세부 사항
+    - 세부 사항
+   
+  ### 🖼️ Preview
+  
+  <img src='사진URL' width=500 />
+</details>
+<details>  
+  <summary><strong>[Hyunminmax/신현민]</strong></summary>
+  
+  ### ✅ Done
+  
+  - 구현한 내용
+    - 세부 사항
+    - 세부 사항
+  
+  ### ⚙️ in Progress
+  
+  - 구현 중인 내용
+    - 세부 사항
+    - 세부 사항
+        
+  ### 📚 Next
+  
+  - 구현 예정
+    - 세부 사항
+    - 세부 사항
+   
+  ### 🖼️ Preview
+  
+  <img src='사진URL' width=500 />
+</details>
+<details>  
+  <summary><strong>[이준영]</strong></summary>
+  
+  ### ✅ Done
+  
+  - 구현한 내용
+    - 세부 사항
+    - 세부 사항
+  
+  ### ⚙️ in Progress
+  
+  - 구현 중인 내용
+    - 세부 사항
+    - 세부 사항
+        
+  ### 📚 Next
+  
+  - 구현 예정
+    - 세부 사항
+    - 세부 사항
+   
+  ### 🖼️ Preview
+  
+  <img src='사진URL' width=500 />
+</details>
+</details>
+
+<details>  
+  <summary><strong>작성 예시</strong></summary>
+  
+  ### ✅ Done
+  
+  - 구현한 내용
+    - 세부 사항
+    - 세부 사항
+  
+  ### ⚙️ in Progress
+  
+  - 구현 중인 내용
+    - 세부 사항
+    - 세부 사항
+        
+  ### 📚 Next
+  
+  - 구현 예정
+    - 세부 사항
+    - 세부 사항
+   
+  ### 🖼️ Preview
+  
+  <img src='사진URL' width=500 />
+  
+</details>
