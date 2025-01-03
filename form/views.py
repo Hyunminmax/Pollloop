@@ -8,6 +8,9 @@ from rest_framework.response import Response
 from rest_framework import status
 from .serializers import FormSerializer
 from uuid import UUID
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
+
+
 
 ############현민############
 class FormCreateView(APIView):
@@ -20,6 +23,31 @@ class FormCreateView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class FormView(APIView):
+    @extend_schema(
+            summary="폼의 모든정보 로드",
+            description="미리보기, 참여폼에서 사용",
+            parameters=[
+                OpenApiParameter(
+                    name='uuid', 
+                    description="폼의 uuid(필수)",
+                    required=True, 
+                    type=str,
+                    location=OpenApiParameter.PATH,
+                    examples=[
+                        OpenApiExample(
+                            name='uuid예시',
+                            value='f4f86d3e59954b57afe0b28bfc0fd8ad',
+                            description='예시로 제공된 uuid'
+                        ),
+                    ],
+                ),
+            ],
+            responses={
+                    200: "폼 정보가 성공적으로 반환됨",
+                    400: "잘못된 요청 (UUID 누락)",
+                    404: "폼을 찾을 수 없음",
+            }
+    )
     def get(self, request, uuid):
         form_uuid = UUID(uuid)
         if not form_uuid:
