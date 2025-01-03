@@ -28,7 +28,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = ENV.get("Secret_Key")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = []
 
@@ -41,7 +41,6 @@ CUSTOM_APPS = [
     'rest_framework',
     'drf_spectacular',
     'drf_spectacular_sidecar',
-    'django_seed',
     'rest_framework_simplejwt',
 ]
 
@@ -133,7 +132,6 @@ AUTH_PASSWORD_VALIDATORS = [
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_AUTHENTICATION_CLASSES': "rest_framework_simplejwt.authentication.JWTAuthentication",
-
     # JWT 토큰 활성화 후 적용
     # 'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework_simplejwt.authentication.JWTAuthentication',],
     # 'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticated',],
@@ -189,7 +187,7 @@ LOGGING = {
 
 SIMPLE_JWT = {
     # 토큰 수명관리
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),     # ACCESS_TOKEN 유효기간
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),     # ACCESS_TOKEN 유효기간
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),        # 새로고침 토큰 유효기간
     # 토큰 갱신 정책
     'ROTATE_REFRESH_TOKENS': True,         # 리플레시 토큰 사용시 새로운 토큰 발급여부
@@ -219,15 +217,4 @@ SIMPLE_JWT = {
     "TOKEN_USER_CLASS": "rest_framework_simplejwt.models.TokenUser",            # 토큰의 고유 식별자를 지정하는 클레임 이름
 
     "JTI_CLAIM": "jti",
-    # 슬라이딩 토큰 (선택)
-    "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",       # 슬라이딩 토큰의 인증 유효긴간
-    "SLIDING_TOKEN_LIFETIME": timedelta(minutes=5),
-    "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
-
-    "TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainPairSerializer",
-    "TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSerializer",
-    "TOKEN_VERIFY_SERIALIZER": "rest_framework_simplejwt.serializers.TokenVerifySerializer",
-    "TOKEN_BLACKLIST_SERIALIZER": "rest_framework_simplejwt.serializers.TokenBlacklistSerializer",
-    "SLIDING_TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainSlidingSerializer",
-    "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
 }
