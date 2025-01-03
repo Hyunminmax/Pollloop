@@ -16,6 +16,7 @@ drf-spectacular = "^0.28.0"
 drf-spectacular-sidecar = "^2024.12.1"
 django-seed = "^0.3.1"
 psycopg2 = "^2.9.10"
+djangorestframework-simplejwt = "^5.3.1"
 
 
 [build-system]
