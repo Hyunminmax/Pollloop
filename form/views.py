@@ -6,7 +6,7 @@ from .models import Form, Respondent, Questions, OptionsOfQuestions, MultipleAns
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import FormSerializer
+from .serializers import FormSerializer, FormInvitedSerializer
 from uuid import UUID
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
 
@@ -60,6 +60,41 @@ class FormView(APIView):
         serializer = FormSerializer(form)
         
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class FormInvitedView(APIView):
+    @extend_schema(
+            summary="폼에 참여하기",
+            description="폼 링크를 눌러 접속하면 접속자의 Access Token으로 사용자를 구분하고 전달받은 폼 uuid를 조합하여 사용자가 참여한 폼을 기록한다.",
+            request=FormInvitedSerializer,
+            examples=[
+                OpenApiExample(
+                    name= 'Example Request',
+                    value= {
+                        'uuid': 'f4f86d3e59954b57afe0b28bfc0fd8ad',
+                        'user': 1
+                    },
+                    description="폼 참여 데이터 user값은 추후에 토큰에서 추출하는 것으로 변경 예정"
+                ),
+            ],
+            responses={
+                    200: "폼 정보가 성공적으로 반환됨",
+                    400: "잘못된 요청 (UUID 누락)",
+                    404: "폼을 찾을 수 없음",
+            },
+    )
+            
+    def post(self, request):
+        serializer = FormInvitedSerializer(data=request.data)
+        if serializer.is_valid():
+            respondent, created = serializer.save()
+            if created:
+                # 신규생성 완료
+                return Response(status=status.HTTP_201_CREATED)
+            # 기존 참여자
+            return Response(status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+
 
 
 

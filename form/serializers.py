@@ -1,5 +1,37 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from .models import *
+from user.models import CustomUser
+from django.core.exceptions import ObjectDoesNotExist
+
+class FormInvitedSerializer(serializers.ModelSerializer):
+    uuid = serializers.UUIDField(write_only=True)
+    user = serializers.IntegerField(write_only=True)
+    
+    class Meta:
+        model = Respondent
+        fields = ['uuid', 'user']
+    
+    def validate_uuid(self, value):
+        form = get_object_or_404(Form, uuid=value)
+        return form
+    
+    def validate_user(self, value):
+        user = get_object_or_404(CustomUser, id=value)
+        return user
+    
+    def create(self, validated_data):
+        form = validated_data['uuid']
+        user = validated_data['user']
+        # form, user 정보로 기존 참여자가 있는지 조회
+        existing_respondent = Respondent.objects.filter(user=user, form=form).first()
+        # 기존 참여자면 참여자 정보 반환
+        if existing_respondent:
+            return existing_respondent, False
+        # 신규 참여자면 생성
+        respondent = Respondent.objects.create(user=user, form=form)
+        return respondent, True
+
 
 #폼 시리얼라이저가 질문과 질문의 보기를 포함해야 하기 때문에 질문의 보기부터 질문, 폼 순서로 작성
 
