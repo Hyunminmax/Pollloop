@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from .models import *
 from user.models import CustomUser
@@ -13,14 +14,10 @@ class FormInvitedSerializer(serializers.ModelSerializer):
     
     def validate_uuid(self, value):
         form = get_object_or_404(Form, uuid=value)
-        
         return form
     
     def validate_user(self, value):
-        try:
-            user = CustomUser.objects.get(id=value)
-        except ObjectDoesNotExist:
-            raise serializers.ValidationError("유효하지 않은 사용자 입니다.")
+        user = get_object_or_404(CustomUser, id=value)
         return user
     
     def create(self, validated_data):
