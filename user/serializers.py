@@ -31,7 +31,11 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ("username", "email", "password", "password2")
+        fields = [
+            "username",
+            "email",
+            "password",
+            "password2"]
 
 
     # password와 password2가 같은지 유효성 검사
@@ -67,3 +71,14 @@ class LoginSerializer(TokenObtainPairSerializer):
         data['access'] = str(refresh.access_token)
         data['user'] = user
         return data
+
+    class Meta:
+        model = CustomUser
+        fields = [
+            'username',
+            'email',
+            'password',
+            'password2',
+            'refresh',
+            'access',
+        ]
