@@ -149,6 +149,3 @@ class UserLoginView(APIView):
             "errors": serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
 
-
-class FindPasswordView(APIView):
-
