@@ -12,10 +12,8 @@ class FormInvitedSerializer(serializers.ModelSerializer):
         fields = ['uuid', 'user']
     
     def validate_uuid(self, value):
-        try:
-            form = Form.objects.get(uuid=value)
-        except ObjectDoesNotExist:
-            raise serializers.ValidationError("유효하지 않은 UUID 입니다.")
+        form = get_object_or_404(Form, uuid=value)
+        
         return form
     
     def validate_user(self, value):
