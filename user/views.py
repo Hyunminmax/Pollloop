@@ -11,17 +11,17 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import AllowAny
-
 from .models import CustomUser
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
 import requests
+
 
 # 사용자 회원가입을 처리하는 뷰
 class UserRegistrationView(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = RegisterSerializer
-    permission_classes = [AllowAny]
-    authentication_classes = []
+    permission_classes = [AllowAny]  # 누구나 접근 가능
+    authentication_classes = []  # 인증 불필요
 
     @extend_schema(
         summary="사용자 회원가입",
@@ -30,7 +30,7 @@ class UserRegistrationView(generics.CreateAPIView):
             'application/json': {
                 'type': 'object',
                 'properties': {
-                    'username': {'type': 'string', 'nullable':True},
+                    'username': {'type': 'string', 'nullable': True},
                     'email': {'type': 'string'},
                     'password': {'type': 'string', 'minLength': 8, 'maxLength': 20},
                     'password2': {'type': 'string', 'minLength': 8, 'maxLength': 20},
@@ -136,10 +136,11 @@ class UserRegistrationView(generics.CreateAPIView):
             "errors": serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
 
+
 # 사용자 로그인을 처리하는 뷰
 class UserLoginView(APIView):
-    permission_classes = [AllowAny]
-    authentication_classes = []
+    permission_classes = [AllowAny]  # 누구나 접근 가능
+    authentication_classes = []  # 인증 불필요
 
     @extend_schema(
         summary="사용자 로그인",
@@ -177,9 +178,10 @@ class UserLoginView(APIView):
             "errors": serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
 
+
 # 카카오 로그인 URL을 제공하는 뷰
 class KakaoLoginView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [AllowAny]  # 누구나 접근 가능
 
     @extend_schema(
         summary="카카오 로그인 URL 요청",
@@ -191,9 +193,10 @@ class KakaoLoginView(APIView):
         kakao_auth_url = f"https://kauth.kakao.com/oauth/authorize?client_id={settings.KAKAO_REST_API_KEY}&redirect_uri={settings.KAKAO_REDIRECT_URI}&response_type=code"
         return Response({"auth_url": kakao_auth_url})
 
+
 # 카카오 로그인 콜백을 처리하는 뷰
 class KakaoCallbackView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [AllowAny]  # 누구나 접근 가능
 
     @extend_schema(
         summary="카카오 로그인 콜백 처리",
@@ -229,8 +232,10 @@ class KakaoCallbackView(APIView):
 
         # 사용자 생성 또는 조회
         try:
+            # 이미 가입된 사용자인 경우
             user = CustomUser.objects.get(email=kakao_account.get("email"))
         except CustomUser.DoesNotExist:
+            # 새로운 사용자 생성
             user = CustomUser.objects.create(
                 username=kakao_account.get("email").split("@")[0],
                 email=kakao_account.get("email"),
@@ -249,9 +254,10 @@ class KakaoCallbackView(APIView):
             "refresh_token": str(refresh),
         })
 
+
 # 사용자 로그아웃을 처리하는 뷰
 class LogoutView(APIView):
-    authentication_classes = [JWTAuthentication]
+    authentication_classes = [JWTAuthentication]  # JWT 인증 필요
 
     @extend_schema(
         summary="사용자 로그아웃",
