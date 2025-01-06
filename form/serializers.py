@@ -149,6 +149,7 @@ class FormSubmitSerializer(serializers.Serializer):
                         option_number=option_data['option_number']
                     )
                     MultipleAnswers.objects.create(user=user, options_of_question=selected_options)
+        return form
         
 
 
