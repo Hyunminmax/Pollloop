@@ -6,7 +6,7 @@ from .models import Form, Respondent, Questions, OptionsOfQuestions, MultipleAns
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import FormSerializer, FormInvitedSerializer
+from .serializers import FormSerializer, FormInvitedSerializer, FormSubmitSerializer
 from uuid import UUID
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
 
@@ -93,6 +93,139 @@ class FormInvitedView(APIView):
             # 기존 참여자
             return Response(status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class FormSubmitView(APIView):
+    @extend_schema(
+            summary="폼 제출",
+            description="사용자가 폼을 제출하는 경우",
+            request=FormInvitedSerializer,
+            examples=[
+                OpenApiExample(
+                    name= 'Example Request',
+                    value= {
+                        "user": 1,  # 추후 엑세스토큰으로 사용자 구분가능 
+                        "uuid": "f4f86d3e59954b57afe0b28bfc0fd8ad",
+                        "questions": [
+                            {
+                                "layout_type": "SHORT_TYPE",
+                                "question": "이름을 입력해 주세요. ",
+                                "question_order": 1,
+                                "is_required": True,
+                                "options_of_questions": [
+                                    {"option_number": 1, "option_context": "신현민"},
+                                ]
+                            },
+                            {
+                                "layout_type": "SHORT_TYPE",
+                                "question": "소속 트랙을 선택해주세요.",
+                                "question_order": 2,
+                                "is_required": True,
+                                "options_of_questions": [
+                                    {"option_number": 1, "option_context": "HOT TRACKS"},
+                                ]
+                            },
+                            {
+                                "layout_type": "SHORT_TYPE",
+                                "question": "소속 기수를 입력해 주세요.",
+                                "question_order": 3,
+                                "is_required": True,
+                                "options_of_questions": [
+                                    {"option_number": 1, "option_context": "6+2=8기?"},
+                                ]
+                            },
+                            {
+                                "layout_type": "RANGE_TYPE",
+                                "question": "이번 주 나의 학습 성취도는 어땠나요",
+                                "question_order": 4,
+                                "is_required": True,
+                                "options_of_questions": [
+                                    {"option_number": 7, "option_context": "7"},
+                                    # {"option_number": 6, "option_context": "7"},
+                                ]
+                            },
+                            {
+                                "layout_type": "CHECKBOX_TYPE",
+                                "question": "이번 주 어려웠던 주제를 모두 선택해주세요.",
+                                "question_order": 5,
+                                "is_required": True,
+                                "options_of_questions": [
+                                    {"option_number": 1, "option_context": "TypeScript 타입 정의"},
+                                    {"option_number": 3, "option_context": "Redux 상태 관리"},
+                                    {"option_number": 4, "option_context": "비동기 통신 처리"},
+                                    {"option_number": 99, "option_context": "기타는 악기인가?"},
+                                ]
+                            },
+                            {
+                                "layout_type": "STAR_RATING_TYPE",
+                                "question": "이번 주 강의 내용은 어떠셨나요?",
+                                "question_order": 6,
+                                "is_required": True,
+                                "options_of_questions": [
+                                    {"option_number": 4, "option_context": "4"},
+                                ]
+                            },
+                            {
+                                "layout_type": "RADIO_TYPE",
+                                "question": "다음 주 수업은 어떤 방식으로 진행되면 좋을까요?",
+                                "question_order": 7,
+                                "is_required": True,
+                                "options_of_questions": [
+                                    {"option_number": 3, "option_context": "지금 방식이 좋아요"},
+                                ]
+                            },
+                            {
+                                "layout_type": "LONG_TYPE",
+                                "question": "이번 주 학습 내용 중 가장 기억에 남는 것과 그 이유를 작성해 주세요.",
+                                "question_order": 8,
+                                "is_required": True,
+                                "options_of_questions": [
+                                    {"option_number": 1, "option_context": "FE, BE 소통 좋아요~"},
+                                ]
+                            },
+                            {
+                                "layout_type": "IMAGE_SELECT_TYPE",
+                                "question": "마음에 드는 이미지를 선택해 주세요.",
+                                "question_order": 9,
+                                "is_required": True,
+                                "options_of_questions": [
+                                    {"option_number": 2, "option_context": "성깔 더러운 토끼URL"},
+                                ]
+                            },
+                            {
+                                "layout_type": "FILE_UPLOAD_TYPE",
+                                "question": "이번 주 과제물을 제출해 주세요.",
+                                "question_order": 10,
+                                "is_required": True,
+                                "options_of_questions": [
+                                    {"option_number": 1, "option_context": "File URL"},
+                                ]
+                            },
+                            {
+                                "layout_type": "EMAIL_TYPE",
+                                "question": "피드백 답변을 받을 이메일 주소를 입력해 주세요.",
+                                "question_order": 11,
+                                "is_required": True,
+                                "options_of_questions": [
+                                    {"option_number": 1, "option_context": "pollloop@pollloop.com"},
+                                ]
+                            },
+                        ]
+                    },
+                    description="폼 제출 데이터 user값은 토큰에서 추출하는 것으로 변경 예정"
+                ),
+            ],
+            responses={
+                    201: "폼 정보가 성공적으로 제출됨",
+                    400: "잘못된 요청 (UUID 누락)",
+            },
+    )
+    def post(self, request):
+        serializer = FormSubmitSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_201_CREATED)
+        
+        
         
 
 
