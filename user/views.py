@@ -27,7 +27,18 @@ class UserRegistrationView(generics.CreateAPIView):
     @extend_schema(
         summary="사용자 회원가입",
         description="새로운 사용자 계정을 생성하고 JWT TOKEN 발급",
-        request=RegisterSerializer,
+        request={
+            'application/json': {
+                'type': 'object',
+                'properties': {
+                    'username': {'type': 'string', 'nullable':True},
+                    'email': {'type': 'string'},
+                    'password': {'type': 'string'},
+                    'password2': {'type': 'string'},
+                },
+                'required': ['email', 'password', 'password2']
+            }
+        },
         responses={
             201: OpenApiTypes.OBJECT,
             400: OpenApiTypes.OBJECT,
@@ -37,9 +48,9 @@ class UserRegistrationView(generics.CreateAPIView):
                 'Successful registration',
                 value={
                     "message": "회원가입이 성공적으로 완료되었습니다.",
-                    "usernaem": "username예시",
-                    "email": "user@gmail.com",
-                    "refrash": "user_refresh_token",
+                    "email": "user@gmail.com예시",
+                    "username": "username_example",
+                    "refresh": "user_refresh_token",
                     "access": "user_access_token",
                 },
                 response_only=True,
@@ -95,37 +106,16 @@ class UserLoginView(APIView):
     @extend_schema(
         summary="사용자 로그인",
         description="사용자 인증 및 JWT 토큰 발급",
-        request=LoginSerializer,
-        parameters=[
-            OpenApiParameter(
-                name='username',
-                description="사용자 이름(필수)",       #
-                required=True,
-                type=str,
-                location=OpenApiParameter.QUERY,
-                examples=[
-                    OpenApiExample(
-                        name='username예시',
-                        value='example_user',
-                        description='예시로 제공된 사용자 이름'
-                    ),
-                ],
-            ),
-            OpenApiParameter(
-                name='password',
-                description="비밀번호(필수)",
-                required=True,
-                type=str,
-                location=OpenApiParameter.QUERY,
-                examples=[
-                    OpenApiExample(
-                        name='password예시',
-                        value='password123',
-                        description='예시로 제공된 비밀번호'
-                    ),
-                ],
-            ),
-        ],
+        request={
+            'application/json': {
+                'type': 'object',
+                'properties': {
+                    'email': {'type': 'string'},
+                    'password': {'type': 'string'},
+                },
+                'required': ['email', 'password']
+            }
+        },
         responses={
             200: OpenApiTypes.OBJECT,
             400: OpenApiTypes.OBJECT,
@@ -139,8 +129,8 @@ class UserLoginView(APIView):
             refresh = RefreshToken.for_user(user)
             return Response({
                 "message": "로그인이 성공적으로 완료되었습니다.",
-                "username": user.username,
                 "email": user.email,
+                "username": user.username,
                 "refresh": str(refresh),
                 "access": str(refresh.access_token),
             }, status=status.HTTP_200_OK)
@@ -148,4 +138,3 @@ class UserLoginView(APIView):
             "message": "로그인에 실패하셨습니다.",
             "errors": serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
-
