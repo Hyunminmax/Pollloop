@@ -46,7 +46,7 @@ class OptionsOfQuestionsSerializer(serializers.ModelSerializer):
 # 질문 시리얼라이저
 class QuestionsSerializer(serializers.ModelSerializer):
     # OptionsOfQuestions와 관계 설정 Question은 여러개의 Options를 가질수 있지만 필수는 아니다.
-    options_of_questions = OptionsOfQuestionsSerializer(many=True, required=False, source='optionsofquestions_set')
+    options_of_questions = OptionsOfQuestionsSerializer(many=True, required=False)
 
     class Meta:
         model = Questions
@@ -60,7 +60,7 @@ class QuestionsSerializer(serializers.ModelSerializer):
 
 class FormSerializer(serializers.ModelSerializer):
     # Form의 관계 설정 Form은 Questions를 가질수 있지만 필수는 아니다. 생성 후 바로 임시저장의 경우 질문 없음.
-    questions = QuestionsSerializer(many=True, required=False, source='questions_set')
+    questions = QuestionsSerializer(many=True, required=False)
     
     class Meta:
         model = Form
