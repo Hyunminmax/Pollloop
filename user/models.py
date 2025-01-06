@@ -4,7 +4,7 @@ import uuid as uuid_lib
 from django.utils import timezone
 
 class CustomUserManager(BaseUserManager):
-    def create_user(self, email, password, username, **extra_fields):
+    def create_user(self, email, password, **extra_fields):
         if not email:
             raise ValueError("이메일은 필수 입력 사항입니다.")
         email = self.normalize_email(email)
