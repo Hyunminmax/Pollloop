@@ -4,13 +4,15 @@ from .models import *
 from user.models import CustomUser
 from django.core.exceptions import ObjectDoesNotExist
 
+###############현민###############
+# 폼 참여인원 시리얼라이저
 class FormInvitedSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(write_only=True)
     user = serializers.IntegerField(write_only=True)
     
     class Meta:
         model = Respondent
-        fields = ['uuid', 'user']
+        fields = ['uuid', 'user', 'is_complete']
     
     def validate_uuid(self, value):
         form = get_object_or_404(Form, uuid=value)
@@ -32,9 +34,7 @@ class FormInvitedSerializer(serializers.ModelSerializer):
         respondent = Respondent.objects.create(user=user, form=form)
         return respondent, True
 
-
 #폼 시리얼라이저가 질문과 질문의 보기를 포함해야 하기 때문에 질문의 보기부터 질문, 폼 순서로 작성
-
 # 객관식 질문의 보기 시리얼라이저 클래스
 class OptionsOfQuestionsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -58,7 +58,7 @@ class QuestionsSerializer(serializers.ModelSerializer):
             'is_required', 
             'options_of_questions'
             ]
-
+# 폼 시리얼라이저
 class FormSerializer(serializers.ModelSerializer):
     # Form의 관계 설정 Form은 Questions를 가질수 있지만 필수는 아니다. 생성 후 바로 임시저장의 경우 질문 없음.
     questions = QuestionsSerializer(many=True, required=False, source='questions_set')
@@ -116,3 +116,23 @@ class FormSerializer(serializers.ModelSerializer):
     #         for option_data in options_data:
     #             OptionsOfQuestions.objects.create(question=question, **option_data)
     #     return instance
+
+# 폼 요약 시리얼라이저
+class FormSummarySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Form
+        fields = [
+            'user',
+            'title',
+            'tag',
+            'end_at',
+            'is_closed',
+            'access_code',
+            'subtitle',
+            'form_description',
+            'uuid',
+        ]
+
+
+###############명현###############    
