@@ -270,3 +270,5 @@ class LogoutView(APIView):
         user.refresh_token = ""
         user.save()
         return Response({"message": "Successfully logged out."}, status=status.HTTP_200_OK)
+
+

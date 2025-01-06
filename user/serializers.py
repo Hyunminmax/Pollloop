@@ -1,6 +1,7 @@
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.contrib.auth import authenticate
+from jsonschema.validators import validate
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -83,3 +84,48 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ('id', 'email', 'username', 'name', 'profile', 'age', 'uuid')
+
+
+# 비밀번호 재설정
+class NewPasswordSerializer(serializers.Serializer):
+    # email 검사
+    email = serializers.EmailField()
+
+
+class PasswordValidator(serializers.Serializer):
+    # Password의 길이 검사
+    def __init__(self, min_lenght=8, max_lenght=20):
+        self.min_lenght = min_lenght
+        self.max_lenght = max_lenght
+
+    def __call__(self, password):
+        if len(password) < self.min_lenght or len(password) > self.max_lenght:
+            raise serializers.ValidationError(
+                f"비밀번호의 길이는 {self.min_lenght}자 이상 {self.max_lenght}이하여야 합니다."
+            )
+
+
+class SetNewPasswordSerializer(serializers.Serializer):
+    uid = serializers.CharField()
+    token = serializers.CharField()
+    new_password = serializers.CharField(write_only=True)
+    new_password2 = serializers.CharField(write_only=True)
+
+    # 비밀번호 유효성 검사
+    def validate(self, data):
+        # 입력한 두 비밀번호가 일치하는 가
+        if data["new_password"] != data["new_password2"]:
+            raise serializers.ValidationError("새 비밀번호가 서로 일치하지 않습니다.")
+
+        # 이전 비밀번호와 일치하는지에 대한 검사
+        user = self.context["user"]
+        if user.check_password(data["new_password"]):
+            raise serializers.ValidationError("새로운 비밀번호는 이전 비밀번호와 달라야 합니다.")
+
+        try:
+            validate_password(data["new_password"], user=user)
+            PasswordValidator()(data["new_password"])
+        except ValidationError as e:    # e는 예외 객체를 "e"변수 할당
+            raise serializers.ValidationError(str(e))   # ValidationError의 메시지를 문자열로 변환
+
+        return data
