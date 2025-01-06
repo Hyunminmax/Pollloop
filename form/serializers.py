@@ -133,6 +133,15 @@ class FormSubmitSerializer(serializers.Serializer):
     def create(self, validated_data):
         form = validated_data['form']
         user = validated_data['user']
+        # 제출자 등록 호출
+        form_invited_serializer = FormInvitedSerializer(data={
+            'uuid' : form.uuid,
+            'user' : user.id
+        })
+        form_invited_serializer.is_valid(raise_exception=True)
+        respondent, created = form_invited_serializer.create(form_invited_serializer.validated_data)
+
+        # 폼 저장
         questions_data = validated_data['questions']
         for question_data in questions_data:
             question = get_object_or_404(Questions, form=form, question_order=question_data['question_order'])
@@ -149,6 +158,7 @@ class FormSubmitSerializer(serializers.Serializer):
                         option_number=option_data['option_number']
                     )
                     MultipleAnswers.objects.create(user=user, options_of_question=selected_options)
+        form_invited_serializer.update(instance=respondent, validated_data={'is_complete':True})
         return form
         
 
