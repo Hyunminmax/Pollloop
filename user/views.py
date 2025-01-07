@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.decorators import method_decorator
 from django.utils.http import urlsafe_base64_decode
 from django.views.decorators.csrf import csrf_exempt
@@ -10,7 +10,7 @@ from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
-from rest_framework import status, generics
+from rest_framework import status, generics, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -18,7 +18,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import AllowAny
 from .models import CustomUser
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer, SetNewPasswordSerializer, \
-    NewPasswordSerializer
+    NewPasswordSerializer, UserProfileSerializer, UserProfileUpdateSerializer
 import requests
 import uuid
 
@@ -343,3 +343,20 @@ class SetNewPasswordView(APIView):
                 return Response({'message': '비밀번호가 성공적으로 재설정되었습니다.'}, status=status.HTTP_200_OK)
             return Response({'error': '유효하지 않은 토큰입니다.'}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# user profile 관리 페이지
+class UserProfileRetrieveUpdateView(generics.RetrieveUpdateAPIView):
+    queryset = CustomUser.objects.all()
+    permission_classes = [permissions.IsAuthenticated]  # 인증된 사용자만 접근 가능
+
+    def get_object(self):
+        # 현재 로그인한 사용자의 프로필을 반환
+        return self.request.user.userprofile
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            # GET 요청 (프로필 조회)시 UserProfileSerializer 사용
+            return UserProfileSerializer
+        # PUT/PATCH 요청 (프로필 수정)시 UserProfileUpdateSerializer 사용
+        return UserProfileUpdateSerializer

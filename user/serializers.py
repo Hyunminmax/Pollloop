@@ -83,8 +83,37 @@ class LoginSerializer(TokenObtainPairSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ('id', 'email', 'username', 'name', 'profile', 'age', 'uuid')
+        fields = ('id', 'email', 'username', 'name', 'profile', 'age', 'uuid')        # 보안을 위해 password 필드는 제외
 
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    # UserSerializer를 중첩하여 사용자 정보도 함께 직렬화
+    user = UserSerializer(read_only=True)
+
+    class Meta:
+        model = CustomUser
+        fields = ('id', 'email', 'name', 'age', 'uuid')
+
+class UserProfileUpdateSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(source='user.email')
+    username = serializers.CharField(source='user.username')
+
+    class Meta:
+        mdoel = CustomUser
+        fields = ['id', 'email', 'username', 'name', 'profile', 'age', 'uuid']
+
+    def update(self, instance, validated_data):
+        # User 모델 데이터 추출
+        user_data = validated_data.pop('user', {})
+        user = instance.user
+
+        # User 모델 필드 업데이트
+        for data, value in user_data.items():
+            setattr(user, data, value)
+        user.save()
+
+        # UserProfile 모델 필드 업데이트
+        return super(UserProfileUpdateSerializer, self).update(instance, validated_data)
 
 # 비밀번호 재설정
 CustomUser = get_user_model()
