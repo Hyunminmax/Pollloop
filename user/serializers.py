@@ -78,7 +78,7 @@ class LoginSerializer(TokenObtainPairSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ['username', 'email', 'password', 'password2', 'refresh', 'access']
+        fields = ['username', 'email', 'password', 'password2', 'refresh']
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
