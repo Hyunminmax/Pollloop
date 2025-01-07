@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import FormCreateView, FormView, FormInvitedView, FormSubmitView, FromSummaryView
+from .views import FormCreateView, FormListView, FormView, FormInvitedView, FormSubmitView, FromSummaryView
 
 urlpatterns = [
     path('uuid:<slug:uuid>/', FormView.as_view(), name='FormLoad'),
@@ -7,4 +7,5 @@ urlpatterns = [
     path('invited/', FormInvitedView.as_view(), name='FormInvited'),
     path('summary/', FromSummaryView.as_view(), name='FromSummary'),
     path('submit/', FormSubmitView.as_view(), name='FormSubmit'),
+    path('list/user_id:<user_id>/', FormListView.as_view(), name='FormList'),
 ]
