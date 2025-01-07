@@ -167,25 +167,49 @@ class FromDataSerializer(serializers.ModelSerializer):
         for question in questions:
             options = OptionsOfQuestions.objects.filter(question=question)
             options_stats = []
-            for option in options:
-                # 객관식
-                if question.layout_type in ['CHECKBOX_TYPE', 'RADIO_TYPE', 'DROPDOWN_TYPE', 'RANGE_TYPE', 'STAR_RATING_TYPE', 'IMAGE_SELECT_TYPE']:
-                    count = Statistics.objects.filter(options_of_question=option).aggregate(models.Sum('count'))['count__sum'] or 0
+            
+            # 객관식
+            if question.layout_type in ['CHECKBOX_TYPE', 'RADIO_TYPE', 'DROPDOWN_TYPE', 'RANGE_TYPE', 'STAR_RATING_TYPE', 'IMAGE_SELECT_TYPE']:
+                for option in options:
+                    if option.option_number in [100, 200]:
+                        continue
+                    if option.option_number not in [99]:
+                        count = MultipleAnswers.objects.filter(options_of_question=option).count()
+                        options_stats.append({
+                            'label': option.option_context,
+                            'count': count,
+                        })
+                    else:
+                        etc_responses = SubjectiveAnswers.objects.filter(question=question, options_of_question=option)
+                        response_values = []
+                        
+                        for res in etc_responses:
+                            response_values.append(
+                                res.response
+                                )
+                        count = len(response_values)
+                    
+                        options_stats.append({
+                        'label': option.option_context,
+                        'values': response_values,
+                        'count': count,
+                        })
+                        
+            # 주관식
+            else:
+                subjective_responses = SubjectiveAnswers.objects.filter(question=question)
+                response_values = []
+                for res in subjective_responses:
                     options_stats.append({
-                        "label": option.option_context,
-                        "count": count,
+                        'value': res.response,
                     })
-                # 주관식
-                else:
-                    options_stats.append({
-                        "value": option.option_context,
-                    })
+
             data.append({
-                "id": question.question_order,
-                "layout_type": question.layout_type,
-                "is_required": question.is_required,
-                "question": question.question,
-                "results": options_stats,
+                'id': question.question_order,
+                'layout_type': question.layout_type,
+                'is_required': question.is_required,
+                'question': question.question,
+                'results': options_stats,
             })
         return data
 
@@ -217,20 +241,43 @@ class FormSubmitSerializer(serializers.Serializer):
         # 폼 저장
         questions_data = validated_data['questions']
         for question_data in questions_data:
-            question = get_object_or_404(Questions, form=form, question_order=question_data['question_order'])
+            question = get_object_or_404(
+                Questions, 
+                form=form, 
+                question_order=question_data['question_order']
+            )
+            options = question_data.get('options_of_questions', [])
+            
             # 주관식
             if question.layout_type in ['SHORT_TYPE','LONG_TYPE','DATE_TYPE','NUMBER_TYPE','EMAIL_TYPE','FILE_UPLOAD_TYPE']:
-                response = question_data.get('options_of_questions', [])[0].get('option_context', '')
-                SubjectiveAnswers.objects.create(user=user, question=question, response=response)
+                if options:
+                    option_number = options[0]['option_number']
+                    selected_option = get_object_or_404(
+                        OptionsOfQuestions,
+                        question = question, 
+                        option_number=option_number
+                    )
+                    response = options[0].get('option_context','')
+                    SubjectiveAnswers.objects.create(user=user, question=question, options_of_question=selected_option, response=response)
+
             # 객관식
             if question.layout_type in ['CHECKBOX_TYPE', 'RADIO_TYPE', 'DROPDOWN_TYPE', 'RANGE_TYPE', 'STAR_RATING_TYPE', 'IMAGE_SELECT_TYPE']:
-                for option_data in question_data.get('options_of_questions',[]):
-                    selected_options = get_object_or_404(
-                        OptionsOfQuestions, 
-                        question=question, 
-                        option_number=option_data['option_number']
-                    )
-                    MultipleAnswers.objects.create(user=user, options_of_question=selected_options)
+                for option_data in options:
+                    if option_data['option_number'] == 99:
+                        selected_option = get_object_or_404(
+                            OptionsOfQuestions,
+                            question=question,
+                            option_number=option_data['option_number']
+                        )
+                        response = option_data.get('option_context', '')
+                        SubjectiveAnswers.objects.create(user=user, question=question, options_of_question=selected_option, response=response)
+                    else:
+                        selected_options = get_object_or_404(
+                            OptionsOfQuestions, 
+                            question=question, 
+                            option_number=option_data['option_number']
+                        )
+                        MultipleAnswers.objects.create(user=user, options_of_question=selected_options)
         # 제출자 제출완료로 변경 FormInvitedSerializer 이용
         form_invited_serializer.update(instance=respondent, validated_data={'is_complete':True})
         return form
