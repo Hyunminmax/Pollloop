@@ -135,7 +135,6 @@ class FormSummarySerializer(serializers.ModelSerializer):
             'form_description',
             'uuid',
         ]
-
    
 # 폼 제출 시리얼라이저
 class FormSubmitSerializer(serializers.Serializer):
@@ -206,6 +205,21 @@ class FormSubmitSerializer(serializers.Serializer):
         ('IMAGE_SELECT_TYPE','IMAGE_SELECT_TYPE'),
     ]        
 
-
+# 폼 리스트 시리얼라이저
+class FormListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Form
+        fields =[
+            'title',
+            'tag',
+            'create_at',
+            'end_at',
+            'is_closed',
+            'access_code',
+            'uuid',
+            'target_count',
+            'is_private',
+            'is_bookmark'
+        ]
 
 ###############명현############### 

@@ -1,12 +1,14 @@
+from lzma import FORMAT_ALONE
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from django.utils import timezone
 from django.views import View
 from .models import Form, Respondent, Questions, OptionsOfQuestions, MultipleAnswers, SubjectiveAnswers, Statistics
+from user.models import CustomUser
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import FormSerializer, FormInvitedSerializer, FormSubmitSerializer
+from .serializers import FormListSerializer, FormSerializer, FormInvitedSerializer, FormSubmitSerializer
 from uuid import UUID
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
 
@@ -277,6 +279,8 @@ class FromSummaryView(APIView):
     )
     def get(self, request):
         pass    
+
+
 class FormSubmitView(APIView):
     @extend_schema(
             summary="폼 제출",
@@ -408,6 +412,29 @@ class FormSubmitView(APIView):
         serializer.save()
         return Response(status=status.HTTP_201_CREATED)
         
+class FormListView(APIView):
+    @extend_schema(
+        summary="나의 폼 리스트 로드",
+        description="나의 폼에서 사용, user_id는 추후 토큰으로 변경 예정",
+        responses={
+                200: "폼 정보가 성공적으로 반환됨",
+                400: "잘못된 요청 (UUID 누락)",
+                404: "폼을 찾을 수 없음",
+        }
+    )
+    def get(self, request, user_id):
+        if not user_id: # 토큰으로 변경시 삭제 예정
+            return Response({"error": "user_id is required."}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user = CustomUser.objects.get(id=user_id)
+        except CustomUser.DoesNotExist:
+            return Response({"error": "User does not exist."}, status=status.HTTP_404_NOT_FOUND)
+
+        user_forms = Form.objects.filter(user=user)
+        if not user_forms.exists():
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        serializer = FormListSerializer(user_forms, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
         
         
 
