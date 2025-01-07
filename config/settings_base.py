@@ -222,8 +222,6 @@ SIMPLE_JWT = {
 }
 
 
-# env = environ.Env()
-# environ.Env.read_env()
 
 
 # 카카오 소셜 로그인 설정
