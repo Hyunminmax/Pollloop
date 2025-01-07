@@ -133,8 +133,7 @@ class FormSummarySerializer(serializers.ModelSerializer):
             'uuid',
         ]
 
-
-###############명현###############    
+   
 # 폼 제출 시리얼라이저
 class FormSubmitSerializer(serializers.Serializer):
     user = serializers.IntegerField(write_only=True)
@@ -152,7 +151,7 @@ class FormSubmitSerializer(serializers.Serializer):
     def create(self, validated_data):
         form = validated_data['form']
         user = validated_data['user']
-        # 제출자 등록 호출
+        # 제출자 등록 호출 FormInvitedSerializer 이용
         form_invited_serializer = FormInvitedSerializer(data={
             'uuid' : form.uuid,
             'user' : user.id
@@ -177,6 +176,7 @@ class FormSubmitSerializer(serializers.Serializer):
                         option_number=option_data['option_number']
                     )
                     MultipleAnswers.objects.create(user=user, options_of_question=selected_options)
+        # 제출자 제출완료로 변경 FormInvitedSerializer 이용
         form_invited_serializer.update(instance=respondent, validated_data={'is_complete':True})
         return form
         
@@ -202,3 +202,7 @@ class FormSubmitSerializer(serializers.Serializer):
         ('STAR_RATING_TYPE','STAR_RATING_TYPE'),
         ('IMAGE_SELECT_TYPE','IMAGE_SELECT_TYPE'),
     ]        
+
+
+
+###############명현############### 
