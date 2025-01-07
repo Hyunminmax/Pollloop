@@ -71,6 +71,9 @@ class FormSerializer(serializers.ModelSerializer):
             'create_at', #폼의 생성시간
             'end_at', # 폼의 작성 제한 시간
             'is_closed', # 폼 종료여부
+            'target_count', # 목표인원
+            'is_bookmark', # 즐겨찾기 여부
+            'is_private', # 비공개 여부 
             'access_code', # 폼 접근 코드
             'subtitle', # 폼의 소제목
             'form_description', # 폼의 설명
