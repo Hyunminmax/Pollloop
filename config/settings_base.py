@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 from datetime import timedelta
 from pathlib import Path
+
+
 from dotenv import dotenv_values
 
 
@@ -219,6 +221,10 @@ SIMPLE_JWT = {
     "JTI_CLAIM": "jti",
 }
 
-# 카카오
-# KAKAO_REST_API_KEY = "REST API Key"
-# KAKAO_CALLBACK_URL = "http://127.0.0.1:8000/users/social/kakao/callback/"
+
+
+
+# 카카오 소셜 로그인 설정
+KAKAO_REST_API_KEY = ENV.get('KAKAO_REST_API_KEY')
+KAKAO_REDIRECT_URI = ENV.get('KAKAO_REDIRECT_URI')
+
