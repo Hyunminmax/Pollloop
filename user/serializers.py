@@ -1,6 +1,6 @@
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, get_user_model
 from jsonschema.validators import validate
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
@@ -87,45 +87,60 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 # 비밀번호 재설정
-class NewPasswordSerializer(serializers.Serializer):
-    # email 검사
-    email = serializers.EmailField()
+CustomUser = get_user_model()
 
-
-class PasswordValidator(serializers.Serializer):
-    # Password의 길이 검사
-    def __init__(self, min_lenght=8, max_lenght=20):
-        self.min_lenght = min_lenght
-        self.max_lenght = max_lenght
+class PasswordValidator:
+    # 비밀번호 길이 검증을 위한 커스텀 유효성 검사기
+    def __init__(self, min_length=8, max_length=20):
+        self.min_length = min_length
+        self.max_length = max_length
 
     def __call__(self, password):
-        if len(password) < self.min_lenght or len(password) > self.max_lenght:
-            raise serializers.ValidationError(
-                f"비밀번호의 길이는 {self.min_lenght}자 이상 {self.max_lenght}이하여야 합니다."
+        if len(password) < self.min_length or len(password) > self.max_length:
+            raise ValidationError(
+                f"비밀번호의 길이는 {self.min_length}자 이상 {self.max_length}자 이하여야 합니다."
             )
 
+class NewPasswordSerializer(serializers.Serializer):
+    # 비밀번호 재설정 요청을 위한 시리얼라이저
+    email = serializers.EmailField()
 
 class SetNewPasswordSerializer(serializers.Serializer):
-    uid = serializers.CharField()
-    token = serializers.CharField()
+    # 새 비밀번호 설정을 위한 시리얼라이저
+    uid = serializers.CharField()  # 사용자 식별자 (UUID)
+    token = serializers.CharField()  # 비밀번호 재설정 토큰
     new_password = serializers.CharField(write_only=True)
     new_password2 = serializers.CharField(write_only=True)
 
-    # 비밀번호 유효성 검사
     def validate(self, data):
-        # 입력한 두 비밀번호가 일치하는 가
+        # 새 비밀번호 일치 여부 확인
         if data["new_password"] != data["new_password2"]:
             raise serializers.ValidationError("새 비밀번호가 서로 일치하지 않습니다.")
 
-        # 이전 비밀번호와 일치하는지에 대한 검사
-        user = self.context["user"]
+        # UUID로 사용자 조회
+        try:
+            uid = data['uid']
+            user = CustomUser.objects.get(uuid=uid)
+        except CustomUser.DoesNotExist:
+            raise serializers.ValidationError("유효하지 않은 사용자입니다.")
+
+        # 새 비밀번호가 현재 비밀번호와 다른지 확인
         if user.check_password(data["new_password"]):
             raise serializers.ValidationError("새로운 비밀번호는 이전 비밀번호와 달라야 합니다.")
 
+        # Django의 기본 비밀번호 유효성 검사 및 커스텀 길이 검사 실행
         try:
             validate_password(data["new_password"], user=user)
             PasswordValidator()(data["new_password"])
-        except ValidationError as e:    # e는 예외 객체를 "e"변수 할당
-            raise serializers.ValidationError(str(e))   # ValidationError의 메시지를 문자열로 변환
+        except ValidationError as e:
+            raise serializers.ValidationError(str(e))
 
         return data
+
+    """
+    1. 사용자가 비밀번호 재설정 요청
+    2. 사용자 이메일로 재설정 링크 전송
+    3. 링크에 uid, token 포함 되어있음
+    4. 사용자 링크 클릭시 프론트에서 uid, token 추출
+    5. 사용자 새 비번 입력시 프론트에서 uid, tokem, 새비번 백엔드로
+    """

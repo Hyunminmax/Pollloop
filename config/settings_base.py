@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 from datetime import timedelta
 from pathlib import Path
+
+import environ
 from dotenv import dotenv_values
 
 
@@ -218,6 +220,11 @@ SIMPLE_JWT = {
 
     "JTI_CLAIM": "jti",
 }
+
+
+# env = environ.Env()
+# environ.Env.read_env()
+
 
 # 카카오 소셜 로그인 설정
 KAKAO_REST_API_KEY = ENV.get('KAKAO_REST_API_KEY')

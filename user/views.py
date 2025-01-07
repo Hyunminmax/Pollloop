@@ -1,8 +1,13 @@
-import uuid
-from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.shortcuts import render, redirect
 from django.utils.decorators import method_decorator
+from django.utils.http import urlsafe_base64_decode
 from django.views.decorators.csrf import csrf_exempt
+
+
+from django.core.mail import send_mail
+from django.conf import settings
+from django.contrib.auth.tokens import default_token_generator
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
 from rest_framework import status, generics
@@ -12,8 +17,10 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import AllowAny
 from .models import CustomUser
-from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
+from .serializers import RegisterSerializer, LoginSerializer, UserSerializer, SetNewPasswordSerializer, \
+    NewPasswordSerializer
 import requests
+import uuid
 
 
 # 사용자 회원가입을 처리하는 뷰
@@ -272,3 +279,67 @@ class LogoutView(APIView):
         return Response({"message": "Successfully logged out."}, status=status.HTTP_200_OK)
 
 
+CustomUser = get_user_model()
+
+class RequestPasswordResetView(APIView):
+    # 비밀번호 재설정 요청을 처리하는 뷰
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        summary="비밀번호 재설정 요청",
+        description="사용자 이메일로 비밀번호 재설정 링크를 발송합니다.",
+        request=NewPasswordSerializer,
+        responses={200: OpenApiTypes.OBJECT, 400: OpenApiTypes.OBJECT, 404: OpenApiTypes.OBJECT}
+    )
+    def post(self, request):
+        serializer = NewPasswordSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            try:
+                user = CustomUser.objects.get(email=email)
+            except CustomUser.DoesNotExist:
+                return Response({'error': '해당 이메일로 등록된 사용자가 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+
+            token = default_token_generator.make_token(user)
+            uid = user.uuid
+            reset_url = f"{settings.FRONTEND_URL}/reset-password/{uid}/{token}/"
+
+            send_mail(
+                '비밀번호 재설정',
+                f'비밀번호를 재설정하려면 다음 링크를 클릭하세요: {reset_url}',
+                settings.DEFAULT_FROM_EMAIL,
+                [email],
+                fail_silently=False,
+            )
+
+            return Response({'message': '비밀번호 재설정 이메일을 발송했습니다.'}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class SetNewPasswordView(APIView):
+    # 새 비밀번호 설정을 처리하는 뷰
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        summary="새 비밀번호 설정",
+        description="비밀번호 재설정 링크를 통해 새 비밀번호를 설정합니다.",
+        request=SetNewPasswordSerializer,
+        responses={200: OpenApiTypes.OBJECT, 400: OpenApiTypes.OBJECT}
+    )
+    def post(self, request):
+        serializer = SetNewPasswordSerializer(data=request.data)
+        if serializer.is_valid():
+            uid = serializer.validated_data['uid']
+            token = serializer.validated_data['token']
+            password = serializer.validated_data['new_password']
+
+            try:
+                user = CustomUser.objects.get(uuid=uid)
+            except CustomUser.DoesNotExist:
+                return Response({'error': '유효하지 않은 사용자입니다.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            if default_token_generator.check_token(user, token):
+                user.set_password(password)
+                user.save()
+                return Response({'message': '비밀번호가 성공적으로 재설정되었습니다.'}, status=status.HTTP_200_OK)
+            return Response({'error': '유효하지 않은 토큰입니다.'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
