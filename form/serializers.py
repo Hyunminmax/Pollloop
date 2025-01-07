@@ -167,18 +167,23 @@ class FromDataSerializer(serializers.ModelSerializer):
         for question in questions:
             options = OptionsOfQuestions.objects.filter(question=question)
             options_stats = []
-            for option in options:
-                # 객관식
-                if question.layout_type in ['CHECKBOX_TYPE', 'RADIO_TYPE', 'DROPDOWN_TYPE', 'RANGE_TYPE', 'STAR_RATING_TYPE', 'IMAGE_SELECT_TYPE']:
+            
+            # 객관식
+            if question.layout_type in ['CHECKBOX_TYPE', 'RADIO_TYPE', 'DROPDOWN_TYPE', 'RANGE_TYPE', 'STAR_RATING_TYPE', 'IMAGE_SELECT_TYPE']:
+                for option in options:
+                    if option.option_number in [100, 200]:
+                        pass
                     count = Statistics.objects.filter(options_of_question=option).aggregate(models.Sum('count'))['count__sum'] or 0
                     options_stats.append({
                         "label": option.option_context,
                         "count": count,
                     })
-                # 주관식
-                else:
+            # 주관식
+            else:
+                responses = SubjectiveAnswers.objects.filter(question=question)
+                for response in responses:
                     options_stats.append({
-                        "value": option.option_context,
+                        "value": response.response,
                     })
             data.append({
                 "id": question.question_order,
