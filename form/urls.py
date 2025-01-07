@@ -5,7 +5,7 @@ urlpatterns = [
     path('uuid:<slug:uuid>/', FormView.as_view(), name='FormLoad'),
     path('create/', FormCreateView.as_view(), name='NewForm'),
     path('invited/', FormInvitedView.as_view(), name='FormInvited'),
-    path('summary/', FromSummaryView.as_view(), name='FromSummary'),
+    path('summary/uuid:<slug:uuid>', FromSummaryView.as_view(), name='FromSummary'),
     path('submit/', FormSubmitView.as_view(), name='FormSubmit'),
     path('list/user_id:<user_id>/', FormListView.as_view(), name='FormList'),
 ]
