@@ -1,23 +1,17 @@
-from lzma import FORMAT_ALONE
-from django.shortcuts import get_object_or_404
-from django.http import JsonResponse
-from django.utils import timezone
-from django.views import View
-from .models import Form, Respondent, Questions, OptionsOfQuestions, MultipleAnswers, SubjectiveAnswers, Statistics
+from .models import Form
 from user.models import CustomUser
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import FormListSerializer, FormSerializer, FormInvitedSerializer, FormSubmitSerializer, FormSummarySerializer
+from .serializers import FormListSerializer, FormSerializer, FormInvitedSerializer, FormSubmitSerializer, FormSummarySerializer, FromDataSerializer
 from uuid import UUID
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
-
 
 
 ############현민############
 class FormCreateView(APIView):
     @extend_schema(
-            summary="폼 생성",
+            summary="폼 생성 For002-1",
             description="사용자가 폼을 생성하는 경우",
             request=FormInvitedSerializer,
             examples=[
@@ -181,7 +175,7 @@ class FormCreateView(APIView):
 
 class FormView(APIView):
     @extend_schema(
-            summary="폼의 모든정보 로드",
+            summary="폼의 모든정보 로드 For002-2",
             description="미리보기, 참여폼에서 사용",
             parameters=[
                 OpenApiParameter(
@@ -220,7 +214,7 @@ class FormView(APIView):
 
 class FormInvitedView(APIView):
     @extend_schema(
-            summary="폼에 참여하기",
+            summary="폼에 참여하기 For003",
             description="폼 링크를 눌러 접속하면 접속자의 Access Token으로 사용자를 구분하고 전달받은 폼 uuid를 조합하여 사용자가 참여한 폼을 기록한다.",
             request=FormInvitedSerializer,
             examples=[
@@ -253,7 +247,7 @@ class FormInvitedView(APIView):
     
 class FromSummaryView(APIView):
     @extend_schema(
-        summary="폼의 요약 기본 정보 로드",
+        summary="폼의 요약 기본 정보 로드 For004",
         description="폼 결과요약에서 사용",
         parameters=[
             OpenApiParameter(
@@ -296,7 +290,7 @@ class FromSummaryView(APIView):
 
 class FormSubmitView(APIView):
     @extend_schema(
-            summary="폼 제출",
+            summary="폼 제출 For010",
             description="사용자가 폼을 제출하는 경우",
             request=FormInvitedSerializer,
             examples=[
@@ -427,7 +421,7 @@ class FormSubmitView(APIView):
         
 class FormListView(APIView):
     @extend_schema(
-        summary="나의 폼 리스트 로드",
+        summary="나의 폼 리스트 로드 For008",
         description="나의 폼에서 사용, user_id는 추후 토큰으로 변경 예정",
         responses={
                 200: "폼 정보가 성공적으로 반환됨",
@@ -449,79 +443,47 @@ class FormListView(APIView):
         serializer = FormListSerializer(user_forms, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
         
+class FromDataView(APIView):
+    @extend_schema(
+        summary="폼의 요약 탭 정보 로드 For005",
+        description="폼 결과요약의 요약탭에서 사용",
+        parameters=[
+            OpenApiParameter(
+                name='uuid', 
+                description="폼의 uuid(필수)",
+                required=True, 
+                type=str,
+                location=OpenApiParameter.PATH,
+                examples=[
+                    OpenApiExample(
+                        name='uuid예시',
+                        value='dcb5c9dffd8c46a298f9022188034483',
+                        description='예시로 제공된 uuid, 사용자 정보는 token으로 처리'
+                    ),
+                ],
+            ),
+        ],
+        responses={
+                200: "폼 정보가 성공적으로 반환됨",
+                400: "잘못된 요청 (UUID 누락)",
+                404: "폼을 찾을 수 없음",
+        }
+    )     
+    def get(self, request, uuid):
+        form_uuid = UUID(uuid)
+        if not form_uuid: 
+            return Response({"error": "uuid is required."}, status=status.HTTP_400_BAD_REQUEST)
         
+        try:
+            form = Form.objects.get(uuid=form_uuid)
+        except Form.DoesNotExist:
+            return Response({"error": "Form does not exist."}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = FromDataSerializer(form)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 
 
 
 ############명현############
-class FormParticipantsView(View):
-    def get(self, request, form_id):
-        form = get_object_or_404(Form, id=form_id)
-
-        # 설문에 참여한 모든 사용자 조회
-        respondents = Respondent.objects.filter(form=form).values_list('user__CustomUser.email', flat=True)
-
-        # 객관식 답변을 제출한 사용자 조회
-        multiple_answer_users = MultipleAnswers.objects.filter(
-            options_of_question__question__form=form
-        ).values_list('user__CustomUser.email', flat=True).distinct()
-
-        # 주관식 답변을 제출한 사용자 조회
-        subjective_answer_users = SubjectiveAnswers.objects.filter(
-            question__form=form
-        ).values_list('user__CustomUser.email', flat=True).distinct()
-
-        # 모든 답변을 제출한 사용자 (객관식과 주관식 모두 포함)
-        all_answer_users = set(multiple_answer_users) | set(subjective_answer_users)
-
-        data = {
-            'all_respondents': list(respondents),
-            'answered_users': list(all_answer_users),
-        }
-
-        return JsonResponse(data)
-
-
-class FormActionView(View):
-    def post(self, request, form_id):
-        form = get_object_or_404(Form, id=form_id)
-        action = self.kwargs.get('action')
-
-        if action == 'enter':
-            # 설문 입장 처리
-            respondent, created = Respondent.objects.get_or_create(
-                user=request.user,
-                form=form
-            )
-            message = '설문에 입장했습니다.'
-        elif action == 'submit':
-            # 설문 제출 처리
-            # 여기서는 제출 여부만 확인합니다. 실제 답변 저장은 별도의 뷰에서 처리해야 합니다.
-            has_answers = MultipleAnswers.objects.filter(user=request.user,
-                                                         options_of_question__question__form=form).exists() or \
-                          SubjectiveAnswers.objects.filter(user=request.user, question__form=form).exists()
-            if has_answers:
-                message = '설문이 성공적으로 제출되었습니다.'
-                submit_at = timezone.now()
-                return JsonResponse({'submit': submit_at, 'message': message})
-            else:
-                return JsonResponse({'status': 'error', 'message': '제출할 답변이 없습니다.'})
-        else:
-            return JsonResponse({'status': 'error', 'message': '잘못된 액션입니다.'})
-
-        return JsonResponse({'status': 'success', 'message': message})
-
-
-'''
-통계에서 각 질문당 몇번 답변 내용에 대한 data 보여주고
-주관식의 경우 답변내용 전체 data보여주기
-'''
-# Form 요약
-class FormDetailView(View):
-    def get(self, request, form_id):
-        form = get_object_or_404(Form, id=form_id)
-        multiple_answer = get_object_or_404(MultipleAnswers, options_of_question__question__form=form)
-        answer = Statistics.objects.filter(id=OptionsOfQuestions, options_of_question__statistics__count=request.count)
-        questions = Questions.objects.filter(form=form)

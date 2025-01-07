@@ -147,7 +147,48 @@ class FormSummarySerializer(serializers.ModelSerializer):
         return Respondent.objects.filter(form=form).count()
     def get_completed_count(self, form):
         return Respondent.objects.filter(form=form, is_complete=True).count()
-   
+
+# 폼 요약 데이터(요약 탭) 시리얼라이저
+class FromDataSerializer(serializers.ModelSerializer):
+    data = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Form
+        fields = [
+            'uuid',
+            'title',
+            'data',
+        ]
+    
+    # 통계 데이터 취합
+    def get_data(self, form):
+        questions = Questions.objects.filter(form=form)
+        data = []
+        for question in questions:
+            options = OptionsOfQuestions.objects.filter(question=question)
+            options_stats = []
+            for option in options:
+                # 객관식
+                if question.layout_type in ['CHECKBOX_TYPE', 'RADIO_TYPE', 'DROPDOWN_TYPE', 'RANGE_TYPE', 'STAR_RATING_TYPE', 'IMAGE_SELECT_TYPE']:
+                    count = Statistics.objects.filter(options_of_question=option).aggregate(models.Sum('count'))['count__sum'] or 0
+                    options_stats.append({
+                        "label": option.option_context,
+                        "count": count,
+                    })
+                # 주관식
+                else:
+                    options_stats.append({
+                        "value": option.option_context,
+                    })
+            data.append({
+                "id": question.question_order,
+                "layout_type": question.layout_type,
+                "is_required": question.is_required,
+                "question": question.question,
+                "results": options_stats,
+            })
+        return data
+
 # 폼 제출 시리얼라이저
 class FormSubmitSerializer(serializers.Serializer):
     user = serializers.IntegerField(write_only=True)
@@ -233,5 +274,7 @@ class FormListSerializer(serializers.ModelSerializer):
             'is_private',
             'is_bookmark'
         ]
+
+
 
 ###############명현############### 
