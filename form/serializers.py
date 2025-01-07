@@ -180,7 +180,6 @@ class FromDataSerializer(serializers.ModelSerializer):
                             'count': count,
                         })
                     else:
-                        count = MultipleAnswers.objects.filter(options_of_question=option).count()
                         etc_responses = SubjectiveAnswers.objects.filter(question=question, options_of_question=option)
                         response_values = []
                         
@@ -188,7 +187,7 @@ class FromDataSerializer(serializers.ModelSerializer):
                             response_values.append(
                                 res.response
                                 )
-                        
+                        count = len(response_values)
                     
                         options_stats.append({
                         'label': option.option_context,
