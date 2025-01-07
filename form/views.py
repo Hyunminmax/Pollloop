@@ -8,7 +8,7 @@ from user.models import CustomUser
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import FormListSerializer, FormSerializer, FormInvitedSerializer, FormSubmitSerializer
+from .serializers import FormListSerializer, FormSerializer, FormInvitedSerializer, FormSubmitSerializer, FormSummarySerializer
 from uuid import UUID
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
 
@@ -253,7 +253,7 @@ class FormInvitedView(APIView):
     
 class FromSummaryView(APIView):
     @extend_schema(
-        summary="폼의 요작정보 로드",
+        summary="폼의 요약 기본 정보 로드",
         description="폼 결과요약에서 사용",
         parameters=[
             OpenApiParameter(
@@ -265,7 +265,7 @@ class FromSummaryView(APIView):
                 examples=[
                     OpenApiExample(
                         name='uuid예시',
-                        value='f4f86d3e59954b57afe0b28bfc0fd8ad',
+                        value='dcb5c9dffd8c46a298f9022188034483',
                         description='예시로 제공된 uuid, 사용자 정보는 token으로 처리'
                     ),
                 ],
@@ -277,9 +277,22 @@ class FromSummaryView(APIView):
                 404: "폼을 찾을 수 없음",
         }
     )
-    def get(self, request):
-        pass    
-
+    def get(self, request, uuid):
+        form_uuid = UUID(uuid)
+        if not form_uuid: 
+            return Response({"error": "uuid is required."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            form = Form.objects.get(uuid=form_uuid)
+        except Form.DoesNotExist:
+            return Response({"error": "Form does not exist."}, status=status.HTTP_404_NOT_FOUND)
+        
+        try:
+            serializer = FormSummarySerializer(form)
+        except Exception :
+            return Response({'error': str(Exception)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class FormSubmitView(APIView):
     @extend_schema(

@@ -119,22 +119,34 @@ class FormSerializer(serializers.ModelSerializer):
     #             OptionsOfQuestions.objects.create(question=question, **option_data)
     #     return instance
 
-# 폼 요약 시리얼라이저
+# 폼 요약 기본정보 시리얼라이저
 class FormSummarySerializer(serializers.ModelSerializer):
+    user_count = serializers.SerializerMethodField()
+    completed_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Form
         fields = [
             'user',
+            'uuid',
             'title',
             'tag',
-            'end_at',
-            'is_closed',
-            'access_code',
             'subtitle',
             'form_description',
-            'uuid',
+            'create_at',
+            'end_at',
+            'user_count',
+            'completed_count',
+            'target_count',
+            'is_closed',
+            'is_private',
+            'access_code'
         ]
+    
+    def get_user_count(self, form):
+        return Respondent.objects.filter(form=form).count()
+    def get_completed_count(self, form):
+        return Respondent.objects.filter(form=form, is_complete=True).count()
    
 # 폼 제출 시리얼라이저
 class FormSubmitSerializer(serializers.Serializer):
