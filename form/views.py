@@ -246,6 +246,34 @@ class FormInvitedView(APIView):
             return Response(status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+class FromSummaryView(APIView):
+    @extend_schema(
+        summary="폼의 요작정보 로드",
+        description="폼 결과요약에서 사용",
+        parameters=[
+            OpenApiParameter(
+                name='uuid', 
+                description="폼의 uuid(필수)",
+                required=True, 
+                type=str,
+                location=OpenApiParameter.PATH,
+                examples=[
+                    OpenApiExample(
+                        name='uuid예시',
+                        value='f4f86d3e59954b57afe0b28bfc0fd8ad',
+                        description='예시로 제공된 uuid, 사용자 정보는 token으로 처리'
+                    ),
+                ],
+            ),
+        ],
+        responses={
+                200: "폼 정보가 성공적으로 반환됨",
+                400: "잘못된 요청 (UUID 누락)",
+                404: "폼을 찾을 수 없음",
+        }
+    )
+    def get(self, request):
+        pass    
 class FormSubmitView(APIView):
     @extend_schema(
             summary="폼 제출",
