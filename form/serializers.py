@@ -2,7 +2,6 @@ from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from .models import *
 from user.models import CustomUser
-from django.core.exceptions import ObjectDoesNotExist
 
 ###############현민###############
 # 폼 참여인원 시리얼라이저
@@ -47,7 +46,7 @@ class OptionsOfQuestionsSerializer(serializers.ModelSerializer):
 # 질문 시리얼라이저
 class QuestionsSerializer(serializers.ModelSerializer):
     # OptionsOfQuestions와 관계 설정 Question은 여러개의 Options를 가질수 있지만 필수는 아니다.
-    options_of_questions = OptionsOfQuestionsSerializer(many=True, required=False, source='optionsofquestions_set')
+    options_of_questions = OptionsOfQuestionsSerializer(many=True, required=False)
 
     class Meta:
         model = Questions
@@ -61,7 +60,7 @@ class QuestionsSerializer(serializers.ModelSerializer):
 # 폼 시리얼라이저
 class FormSerializer(serializers.ModelSerializer):
     # Form의 관계 설정 Form은 Questions를 가질수 있지만 필수는 아니다. 생성 후 바로 임시저장의 경우 질문 없음.
-    questions = QuestionsSerializer(many=True, required=False, source='questions_set')
+    questions = QuestionsSerializer(many=True, required=False)
     
     class Meta:
         model = Form
@@ -136,3 +135,70 @@ class FormSummarySerializer(serializers.ModelSerializer):
 
 
 ###############명현###############    
+# 폼 제출 시리얼라이저
+class FormSubmitSerializer(serializers.Serializer):
+    user = serializers.IntegerField(write_only=True)
+    uuid = serializers.UUIDField(write_only=True)
+    questions = serializers.ListField(child=serializers.DictField(), write_only=True)
+
+    def validate(self, data):
+        # 폼, 사용자 확인
+        form = get_object_or_404(Form, uuid=data['uuid'])
+        user = get_object_or_404(CustomUser, id=data['user'])
+        data['form']=form
+        data['user']=user
+        return data
+    
+    def create(self, validated_data):
+        form = validated_data['form']
+        user = validated_data['user']
+        # 제출자 등록 호출
+        form_invited_serializer = FormInvitedSerializer(data={
+            'uuid' : form.uuid,
+            'user' : user.id
+        })
+        form_invited_serializer.is_valid(raise_exception=True)
+        respondent, created = form_invited_serializer.create(form_invited_serializer.validated_data)
+
+        # 폼 저장
+        questions_data = validated_data['questions']
+        for question_data in questions_data:
+            question = get_object_or_404(Questions, form=form, question_order=question_data['question_order'])
+            # 주관식
+            if question.layout_type in ['SHORT_TYPE','LONG_TYPE','DATE_TYPE','NUMBER_TYPE','EMAIL_TYPE','FILE_UPLOAD_TYPE']:
+                response = question_data.get('options_of_questions', [])[0].get('option_context', '')
+                SubjectiveAnswers.objects.create(user=user, question=question, response=response)
+            # 객관식
+            if question.layout_type in ['CHECKBOX_TYPE', 'RADIO_TYPE', 'DROPDOWN_TYPE', 'RANGE_TYPE', 'STAR_RATING_TYPE', 'IMAGE_SELECT_TYPE']:
+                for option_data in question_data.get('options_of_questions',[]):
+                    selected_options = get_object_or_404(
+                        OptionsOfQuestions, 
+                        question=question, 
+                        option_number=option_data['option_number']
+                    )
+                    MultipleAnswers.objects.create(user=user, options_of_question=selected_options)
+        form_invited_serializer.update(instance=respondent, validated_data={'is_complete':True})
+        return form
+        
+
+
+
+
+
+
+    # LAYOUT_CHOICES = [
+    #     ('SHORT_TYPE', 'SHORT_TYPE'),
+    #     ('LONG_TYPE', 'LONG_TYPE'),
+    #     ('DATE_TYPE', 'DATE_TYPE'),
+    #     ('NUMBER_TYPE', 'NUMBER_TYPE'),
+    #     ('EMAIL_TYPE', 'EMAIL_TYPE'),
+    #     ('FILE_UPLOAD_TYPE', 'FILE_UPLOAD_TYPE')
+    # ]
+    LAYOUT_CHOICES = [
+        ('CHECKBOX_TYPE','CHECKBOX_TYPE'),
+        ('RADIO_TYPE','RADIO_TYPE'),
+        ('DROPDOWN_TYPE','DROPDOWN_TYPE'),
+        ('RANGE_TYPE','RANGE_TYPE'),
+        ('STAR_RATING_TYPE','STAR_RATING_TYPE'),
+        ('IMAGE_SELECT_TYPE','IMAGE_SELECT_TYPE'),
+    ]        

@@ -131,6 +131,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Swagger settings
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+
     # JWT 토큰 활성화 후 적용
     'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework_simplejwt.authentication.JWTAuthentication',],
     # 'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticated',],
@@ -217,3 +218,7 @@ SIMPLE_JWT = {
 
     "JTI_CLAIM": "jti",
 }
+
+# 카카오
+# KAKAO_REST_API_KEY = "REST API Key"
+# KAKAO_CALLBACK_URL = "http://127.0.0.1:8000/users/social/kakao/callback/"

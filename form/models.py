@@ -3,16 +3,26 @@ from user.models import CustomUser
 import uuid as uuid_lib
 
 class Form(models.Model):
+    STATUS_CHOICES = [      #상태
+        ('TEMP', 'TEMP'),
+        ('OPEN', 'OPEN'),
+        ('CLOSED', 'CLOSED'),
+    ]
+
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     title = models.CharField(max_length=255, verbose_name="제목")
     tag = models.CharField(max_length=255, verbose_name="태그")
     create_at = models.DateField(auto_now_add=True)
     end_at = models.DateField()
-    is_closed = models.BooleanField(default=False, help_text="상태") #ENUM값으로 변경해야함
+    is_closed = models.CharField(choices=STATUS_CHOICES,max_length=20,  help_text="상태") #ENUM값으로 변경해야함
     access_code = models.CharField(max_length=255, verbose_name="입장코드", null=True, blank=True)
     subtitle = models.CharField(max_length=255, verbose_name="부 제목")
     form_description = models.CharField(max_length=255, help_text="상세 내용")
     uuid = models.UUIDField(default=uuid_lib.uuid4, unique=True)
+    target_count = models.IntegerField(default=0)
+    is_private = models.BooleanField(default=False) # 기본 값 false = 공개
+    is_bookmark = models.BooleanField(default=False) # 기본 값 false = 즐겨찾기 X인 상태
+
 
     def __str__(self):
         return self.title
@@ -33,18 +43,18 @@ class Respondent(models.Model):
 # 질문
 class Questions(models.Model):
     LAYOUT_CHOICES = [
-        ('단답형', '단답형'),
-        ('장문형', '장문형'),
-        ('체크박스', '체크박스'),
-        ('라디오', '라디오'),
-        ('드롭다운', '드롭다운'),
-        ('범위 선택', '범위 선택'),
-        ('별점', '별점'),
-        ('이미지 선택', '이미지 선택'),
-        ('숫자', '숫자'),
-        ('날짜', '날짜'),
-        ('이메일', '이메일'),
-        ('파일업로드', '파일업로드'),
+        ('SHORT_TYPE', 'SHORT_TYPE'),
+        ('LONG_TYPE', 'LONG_TYPE'),
+        ('CHECKBOX_TYPE', 'CHECKBOX_TYPE'),
+        ('RADIO_TYPE', 'RADIO_TYPE'),
+        ('DROPDOWN_TYPE', 'DROPDOWN_TYPE'),
+        ('RANGE_TYPE', 'RANGE_TYPE'),
+        ('STAR_RATING_TYPE', 'STAR_RATING_TYPE'),
+        ('IMAGE_SELECT_TYPE', 'IMAGE_SELECT_TYPE'),
+        ('NUMBER_TYPE', 'NUMBER_TYPE'),
+        ('DATE_TYPE', 'DATE_TYPE'),
+        ('EMAIL_TYPE', 'EMAIL_TYPE'),
+        ('FILE_UPLOAD_TYPE', 'FILE_UPLOAD_TYPE')
     ]
     form = models.ForeignKey(Form, on_delete=models.CASCADE)
     layout_type = models.CharField(choices=LAYOUT_CHOICES, max_length=255)
@@ -59,8 +69,8 @@ class Questions(models.Model):
 class OptionsOfQuestions(models.Model):
     question = models.ForeignKey(Questions, on_delete=models.CASCADE)
     # 아래 예시와 같이 받기 위해 수정
-    option_number = models.CharField(max_length=2, default=0)
-    option_context = models.CharField(max_length=255)
+    option_number = models.CharField(max_length=3, default=0)
+    option_context = models.CharField(max_length=255, blank=True,)
 # [
 #     {
 #         'option_number': 1, 'option_context': 'asdflkjsadfj',
