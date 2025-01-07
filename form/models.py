@@ -69,7 +69,7 @@ class Questions(models.Model):
 class OptionsOfQuestions(models.Model):
     question = models.ForeignKey(Questions, on_delete=models.CASCADE)
     # 아래 예시와 같이 받기 위해 수정
-    option_number = models.CharField(max_length=3, default=0)
+    option_number = models.SmallIntegerField(default=0)
     option_context = models.CharField(max_length=255, blank=True,)
 # [
 #     {
@@ -97,6 +97,8 @@ class MultipleAnswers(models.Model):
 class SubjectiveAnswers(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     question = models.ForeignKey(Questions, on_delete=models.CASCADE)
+    options_of_question = models.ForeignKey(OptionsOfQuestions, on_delete=models.CASCADE)
+
     response = models.TextField()
 
     class Meta:

@@ -187,7 +187,7 @@ class FormView(APIView):
                     examples=[
                         OpenApiExample(
                             name='uuid예시',
-                            value='f4f86d3e59954b57afe0b28bfc0fd8ad',
+                            value='2bd64b2e1364441b9840020039906fe4',
                             description='예시로 제공된 uuid'
                         ),
                     ],
@@ -221,7 +221,7 @@ class FormInvitedView(APIView):
                 OpenApiExample(
                     name= 'Example Request',
                     value= {
-                        'uuid': 'f4f86d3e59954b57afe0b28bfc0fd8ad',
+                        'uuid': '2bd64b2e1364441b9840020039906fe4',
                         'user': 1
                     },
                     description="폼 참여 데이터 user값은 추후에 토큰에서 추출하는 것으로 변경 예정"
@@ -259,7 +259,7 @@ class FromSummaryView(APIView):
                 examples=[
                     OpenApiExample(
                         name='uuid예시',
-                        value='dcb5c9dffd8c46a298f9022188034483',
+                        value='2bd64b2e1364441b9840020039906fe4',
                         description='예시로 제공된 uuid, 사용자 정보는 token으로 처리'
                     ),
                 ],
@@ -298,7 +298,7 @@ class FormSubmitView(APIView):
                     name= 'Example Request',
                     value= {
                         "user": 1,  # 추후 엑세스토큰으로 사용자 구분가능 
-                        "uuid": "f4f86d3e59954b57afe0b28bfc0fd8ad",
+                        "uuid": "2bd64b2e1364441b9840020039906fe4",
                         "questions": [
                             {
                                 "layout_type": "SHORT_TYPE",
@@ -457,7 +457,7 @@ class FromDataView(APIView):
                 examples=[
                     OpenApiExample(
                         name='uuid예시',
-                        value='dcb5c9dffd8c46a298f9022188034483',
+                        value='2bd64b2e1364441b9840020039906fe4',
                         description='예시로 제공된 uuid, 사용자 정보는 token으로 처리'
                     ),
                 ],
