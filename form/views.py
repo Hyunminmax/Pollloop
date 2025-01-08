@@ -7,7 +7,7 @@ from rest_framework import status
 from .serializers import (
     FormBookmarkSerializer, FormListSerializer, FormSerializer, FormInvitedSerializer, 
     FormSubmitSerializer, FormSummarySerializer, FromDataSerializer,
-    FormCompletedUserSerializer
+    FormCompletedUserSerializer, FromRemoveSerializer
 )
 from uuid import UUID
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
@@ -18,7 +18,7 @@ class FormCreateView(APIView):
     @extend_schema(
             summary="폼 생성 For002-1",
             description="사용자가 폼을 생성하는 경우",
-            request=FormInvitedSerializer,
+            request=FormSerializer,
             examples=[
                 OpenApiExample(
                     name= 'Example Request',
@@ -297,7 +297,7 @@ class FormSubmitView(APIView):
     @extend_schema(
             summary="폼 제출 For010",
             description="사용자가 폼을 제출하는 경우",
-            request=FormInvitedSerializer,
+            request=FormSubmitSerializer,
             examples=[
                 OpenApiExample(
                     name= 'Example Request',
@@ -533,7 +533,7 @@ class FormBookmarkView(APIView):
     @extend_schema(
             summary="폼 즐겨찾기 수정 For011",
             description="폼 목록에서 즐겨찾기 설정하는 경우",
-            request=FormInvitedSerializer,
+            request=FormBookmarkSerializer,
             examples=[
                 OpenApiExample(
                     name= 'Example Request 즐겨찾기 설정',
@@ -559,7 +559,7 @@ class FormBookmarkView(APIView):
                     400: "잘못된 요청 (UUID 누락)",
             },
     )
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
         serializer = FormBookmarkSerializer(data=request.data)
         if serializer.is_valid():
             # 인증 적용후 사용자 정보 확인 부분 삭제 예정
@@ -571,6 +571,34 @@ class FormBookmarkView(APIView):
             return Response(status=status.HTTP_202_ACCEPTED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class FromRemoveView(APIView):
+    @extend_schema(
+            summary="폼 삭제 For009",
+            description="폼 목록에서 폼을 삭제하는 경우",
+            request=FromRemoveSerializer,
+            examples=[
+                OpenApiExample(
+                    name= 'Example Request 즐겨찾기 설정',
+                    value= {
+                        'uuid': '안전상의 이유로 예시uuid를 제공하지 않습니다.   꼭 삭제 테스트용 폼 생성하고 테스트하세요.',
+                        "user": 1,  
+                    },
+                    description="폼 생성 데이터 user값은 토큰에서 추출하는 것으로 변경 예정"
+                ),
+            ],
+            responses={
+                    201: "폼 정보가 성공적으로 제출됨",
+                    400: "잘못된 요청 (UUID 누락)",
+            },
+    )
+    def post(self, request):
+        serializer = FromRemoveSerializer(data=request.data)
+        if serializer.is_valid():
+            result = serializer.delete()
+            return Response(result, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
 
 
 

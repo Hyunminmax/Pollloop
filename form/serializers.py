@@ -325,7 +325,18 @@ class FormBookmarkSerializer(serializers.Serializer):
     # 인증 적용후 삭제 예정
     user = serializers.IntegerField()
 
-
+# 폼 삭제
+class FromRemoveSerializer(serializers.Serializer):
+    # 첫 시도는 ModelSerializer를 상속받아 시도했지만 기존데이터와 충돌?이 발생하며 삭제하지 못한다. 
+    uuid = serializers.UUIDField()
+    user = serializers.IntegerField()
+    
+    def delete(self):
+        uuid = self.validated_data['uuid']
+        user = self.validated_data['user']
+        form = get_object_or_404(Form, uuid=uuid, user=user)
+        form.delete()
+        return True
 
 
 
