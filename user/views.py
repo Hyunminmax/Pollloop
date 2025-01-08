@@ -151,7 +151,6 @@ class UserLoginView(APIView):
 
     @extend_schema(
         summary="사용자 로그인",
-        tags=["Kakao Social"],
         description="사용자 인증 및 JWT 토큰 발급",
         request={
             'application/json': {
@@ -194,7 +193,8 @@ class KakaoLoginView(APIView):
     @extend_schema(
         summary="카카오 로그인 URL 요청",
         description="카카오 로그인을 위한 인증 URL을 반환합니다.",
-        responses={200: OpenApiTypes.OBJECT}
+        responses={200: OpenApiTypes.OBJECT},
+        tags=["Kakao Social"],
     )
     def get(self, request):
         # 카카오 로그인 URL 생성
