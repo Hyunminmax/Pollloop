@@ -165,6 +165,19 @@ tzdata = {version = "*", markers = "sys_platform == \"win32\""}
 argon2 = ["argon2-cffi (>=19.1.0)"]
 bcrypt = ["bcrypt"]
 
+[[package]]     # 주기적인 작업을 예약하고 실행하기 위한 패키지 -> 회원탈퇴기능
+name = "django-crontab"
+version = "0.7.1"
+description = "dead simple crontab powered job scheduling for django"
+optional = false
+python-versions = "*"
+files = [
+    {file = "django-crontab-0.7.1.tar.gz", hash = "sha256:1201810a212460aaaa48eb6a766738740daf42c1a4f6aafecfb1525036929236"},
+]
+
+[package.dependencies]
+Django = ">=1.8"
+
 [[package]]
 name = "djangorestframework"
 version = "3.15.2"
@@ -701,4 +714,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "48072550856a14279bc9932c5efbb91cbb2b53d54c2cb4f3ba272953b2b40d8e"
+content-hash = "d597018ffc6fc8ff4278e455dbed9526092a5154f8bbca5905f67d4106ae45ed"
