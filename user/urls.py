@@ -16,4 +16,6 @@ urlpatterns = [
     path('oauth/kakao/login/', views.KakaoLoginView.as_view(), name='kakao_login'),
     path('oauth/kakao/callback/', views.KakaoCallbackView.as_view(), name='kakao_callback'),
 
+    # Profile
+    path('profile/', views.UserProfileRetrieveUpdateView.as_view(), name='user-profile'),
 ]
