@@ -4,6 +4,14 @@ from .models import *
 from user.models import CustomUser
 
 ###############현민###############
+# UUID 처리를 위한 시리얼라이저
+class UUIDHypenRemoveMixin:
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        if 'uuid' in representation and isinstance(representation['uuid'], str):
+            representation['uuid'] = representation['uuid'].replace('-', '')
+        return representation
+
 # 폼 참여인원 시리얼라이저
 class FormInvitedSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(write_only=True)
@@ -58,7 +66,7 @@ class QuestionsSerializer(serializers.ModelSerializer):
             'options_of_questions'
             ]
 # 폼 시리얼라이저
-class FormSerializer(serializers.ModelSerializer):
+class FormSerializer(UUIDHypenRemoveMixin, serializers.ModelSerializer):
     # Form의 관계 설정 Form은 Questions를 가질수 있지만 필수는 아니다. 생성 후 바로 임시저장의 경우 질문 없음.
     questions = QuestionsSerializer(many=True, required=False)
     
@@ -120,7 +128,7 @@ class FormSerializer(serializers.ModelSerializer):
     #     return instance
 
 # 폼 요약 기본정보 시리얼라이저
-class FormSummarySerializer(serializers.ModelSerializer):
+class FormSummarySerializer(UUIDHypenRemoveMixin, serializers.ModelSerializer):
     user_count = serializers.SerializerMethodField()
     completed_count = serializers.SerializerMethodField()
 
@@ -149,7 +157,7 @@ class FormSummarySerializer(serializers.ModelSerializer):
         return Respondent.objects.filter(form=form, is_complete=True).count()
 
 # 폼 요약 데이터(요약 탭) 시리얼라이저
-class FromDataSerializer(serializers.ModelSerializer):
+class FromDataSerializer(UUIDHypenRemoveMixin, serializers.ModelSerializer):
     data = serializers.SerializerMethodField()
 
     class Meta:
@@ -306,7 +314,7 @@ class FormSubmitSerializer(serializers.Serializer):
     ]        
 
 # 폼 리스트 시리얼라이저
-class FormListSerializer(serializers.ModelSerializer):
+class FormListSerializer(UUIDHypenRemoveMixin, serializers.ModelSerializer):
     class Meta:
         model = Form
         fields =[
