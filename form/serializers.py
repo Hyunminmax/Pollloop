@@ -4,7 +4,7 @@ from .models import *
 from user.models import CustomUser
 
 ###############현민###############
-# UUID 처리를 위한 시리얼라이저
+# UUID 처리를 위한 클래스
 class UUIDHypenRemoveMixin:
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -290,29 +290,6 @@ class FormSubmitSerializer(serializers.Serializer):
         form_invited_serializer.update(instance=respondent, validated_data={'is_complete':True})
         return form
         
-
-
-
-
-
-
-    # LAYOUT_CHOICES = [
-    #     ('SHORT_TYPE', 'SHORT_TYPE'),
-    #     ('LONG_TYPE', 'LONG_TYPE'),
-    #     ('DATE_TYPE', 'DATE_TYPE'),
-    #     ('NUMBER_TYPE', 'NUMBER_TYPE'),
-    #     ('EMAIL_TYPE', 'EMAIL_TYPE'),
-    #     ('FILE_UPLOAD_TYPE', 'FILE_UPLOAD_TYPE')
-    # ]
-    LAYOUT_CHOICES = [
-        ('CHECKBOX_TYPE','CHECKBOX_TYPE'),
-        ('RADIO_TYPE','RADIO_TYPE'),
-        ('DROPDOWN_TYPE','DROPDOWN_TYPE'),
-        ('RANGE_TYPE','RANGE_TYPE'),
-        ('STAR_RATING_TYPE','STAR_RATING_TYPE'),
-        ('IMAGE_SELECT_TYPE','IMAGE_SELECT_TYPE'),
-    ]        
-
 # 폼 리스트 시리얼라이저
 class FormListSerializer(UUIDHypenRemoveMixin, serializers.ModelSerializer):
     class Meta:
@@ -340,5 +317,16 @@ class FormCompletedUserSerializer(UUIDHypenRemoveMixin, serializers.ModelSeriali
     class Meta:
         model = Respondent
         fields = ['email', 'is_complete']
+
+# 폼 즐겨찾기 설정 
+class FormBookmarkSerializer(serializers.Serializer):
+    uuid = serializers.UUIDField()
+    is_bookmark = serializers.BooleanField()
+    # 인증 적용후 삭제 예정
+    user = serializers.IntegerField()
+
+
+
+
 
 ###############명현############### 
