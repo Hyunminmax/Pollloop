@@ -417,7 +417,6 @@ class UserDeleteView(APIView):
 
         # 현재 로그인한 사용자 정보 가져오기
         user = request.user
-
         # 사용자 계정 비활성화
         user.is_active = False
         # 비활성화 시간 기록
