@@ -1,9 +1,13 @@
-from .models import Form
+from .models import Form, Respondent
 from user.models import CustomUser
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import FormListSerializer, FormSerializer, FormInvitedSerializer, FormSubmitSerializer, FormSummarySerializer, FromDataSerializer
+from .serializers import (
+    FormListSerializer, FormSerializer, FormInvitedSerializer, 
+    FormSubmitSerializer, FormSummarySerializer, FromDataSerializer,
+    FormCompletedUserSerializer
+)
 from uuid import UUID
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
 
@@ -482,7 +486,48 @@ class FromDataView(APIView):
         serializer = FromDataSerializer(form)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+class FormCompletedUserView(APIView):
+    @extend_schema(
+        summary="폼의 참여자 목록 탭 정보 로드 For006",
+        description="폼 결과요약의 참여자 목록 탭에서 사용",
+        parameters=[
+            OpenApiParameter(
+                name='uuid', 
+                description="폼의 uuid(필수)",
+                required=True, 
+                type=str,
+                location=OpenApiParameter.PATH,
+                examples=[
+                    OpenApiExample(
+                        name='uuid예시',
+                        value='2bd64b2e1364441b9840020039906fe4',
+                        description='예시로 제공된 uuid, 사용자 정보는 token으로 처리'
+                    ),
+                ],
+            ),
+        ],
+        responses={
+                200: "폼 정보가 성공적으로 반환됨",
+                400: "잘못된 요청 (UUID 누락)",
+                404: "폼을 찾을 수 없음",
+        }
+    )  
 
+    def get(self, request, uuid):
+        form_uuid = UUID(uuid)
+        if not form_uuid: 
+            return Response({"error": "uuid is required."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            form = Form.objects.get(uuid=form_uuid)
+        except Form.DoesNotExist:
+            return Response({"error": "Form does not exist."}, status=status.HTTP_404_NOT_FOUND)
+        
+        respondents = Respondent.objects.filter(form=form)
+
+        serializer = FormCompletedUserSerializer(respondents, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+        
 
 
 

@@ -330,6 +330,15 @@ class FormListSerializer(UUIDHypenRemoveMixin, serializers.ModelSerializer):
             'is_bookmark'
         ]
 
+# 폼 요약 데이터(참여자 목록 탭) 시리얼라이저
+class FormCompletedUserSerializer(UUIDHypenRemoveMixin, serializers.ModelSerializer):
+    # uuid 받아서 폼 찾고
+    # respondent에서 해당 폼 관련 데이터 찾고
+    # 관련 유저들의 이메일과 is_complete 상태반환
+    email = serializers.EmailField(source='user.email', read_only=True)
 
+    class Meta:
+        model = Respondent
+        fields = ['email', 'is_complete']
 
 ###############명현############### 
