@@ -87,16 +87,14 @@ class LogoutSerializer(serializers.Serializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ('id', 'email', 'username', 'name', 'profile', 'age', 'uuid')        # 보안을 위해 password 필드는 제외
+        fields = ('id', 'email', 'username', 'profile', 'age', 'uuid')        # 보안을 위해 password 필드는 제외
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    # UserSerializer를 중첩하여 사용자 정보도 함께 직렬화
-    user = UserSerializer(read_only=True)
 
     class Meta:
         model = CustomUser
-        fields = ('id', 'email', 'name', 'age', 'uuid', 'user')
+        fields = ('id', 'email', 'username', 'age', 'uuid')
 
 class UserProfileUpdateSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(source='user.email')
@@ -104,7 +102,7 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ['id', 'email', 'username', 'name', 'profile', 'age', 'uuid']
+        fields = ['id', 'email', 'username', 'profile', 'age', 'uuid']
 
     def update(self, instance, validated_data):
         # User 모델 데이터 추출
