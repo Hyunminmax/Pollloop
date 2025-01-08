@@ -151,6 +151,7 @@ class UserLoginView(APIView):
 
     @extend_schema(
         summary="사용자 로그인",
+        tags=["Kakao Social"],
         description="사용자 인증 및 JWT 토큰 발급",
         request={
             'application/json': {
@@ -211,7 +212,8 @@ class KakaoCallbackView(APIView):
         parameters=[
             OpenApiParameter(name='code', description='카카오 인증 코드', required=True, type=str)
         ],
-        responses={200: UserSerializer}
+        responses={200: UserSerializer},
+        tags=["Kakao Social"],
     )
     def get(self, request):
         code = request.GET.get('code')
