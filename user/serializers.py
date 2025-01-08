@@ -80,6 +80,10 @@ class LoginSerializer(TokenObtainPairSerializer):
         model = CustomUser
         fields = ['username', 'email', 'password', 'password2', 'refresh']
 
+class LogoutSerializer(serializers.Serializer):
+    refresh_token = serializers.CharField()
+
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
@@ -92,14 +96,14 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ('id', 'email', 'name', 'age', 'uuid')
+        fields = ('id', 'email', 'name', 'age', 'uuid', 'user')
 
 class UserProfileUpdateSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(source='user.email')
     username = serializers.CharField(source='user.username')
 
     class Meta:
-        mdoel = CustomUser
+        model = CustomUser
         fields = ['id', 'email', 'username', 'name', 'profile', 'age', 'uuid']
 
     def update(self, instance, validated_data):
@@ -173,3 +177,10 @@ class SetNewPasswordSerializer(serializers.Serializer):
     4. 사용자 링크 클릭시 프론트에서 uid, token 추출
     5. 사용자 새 비번 입력시 프론트에서 uid, tokem, 새비번 백엔드로
     """
+
+class UserDeleteResponseSerializer(serializers.Serializer):
+    message = serializers.CharField()
+    deletion_date = serializers.DateTimeField()
+
+class UserDeleteRequestSerializer(serializers.Serializer):
+    confirm = serializers.BooleanField(required=True)

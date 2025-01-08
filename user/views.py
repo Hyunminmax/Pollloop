@@ -9,7 +9,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample, OpenApiResponse
 from rest_framework import status, generics, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -17,8 +17,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import AllowAny
 from .models import CustomUser
-from .serializers import RegisterSerializer, LoginSerializer, UserSerializer, SetNewPasswordSerializer, \
-    NewPasswordSerializer, UserProfileSerializer, UserProfileUpdateSerializer
+from .serializers import *
+from datetime import timezone, timedelta
 import requests
 import uuid
 
@@ -264,7 +264,7 @@ class KakaoCallbackView(APIView):
 
 # 사용자 로그아웃을 처리하는 뷰
 class LogoutView(APIView):
-    authentication_classes = [JWTAuthentication]  # JWT 인증 필요
+    serializer_class = LogoutSerializer
 
     @extend_schema(
         summary="사용자 로그아웃",
@@ -289,7 +289,41 @@ class RequestPasswordResetView(APIView):
         summary="비밀번호 재설정 요청",
         description="사용자 이메일로 비밀번호 재설정 링크를 발송합니다.",
         request=NewPasswordSerializer,
-        responses={200: OpenApiTypes.OBJECT, 400: OpenApiTypes.OBJECT, 404: OpenApiTypes.OBJECT}
+        responses={
+            200: OpenApiResponse(
+                response=OpenApiTypes.OBJECT,
+                description="비밀번호 재설정 이메일 발송 성공",
+                examples=[
+                    OpenApiExample(
+                        "Success",
+                        value={
+                            "message": "비밀번호 재설정 이메일을 발송했습니다.",
+                            "email": "CustomUser.email"
+                        }
+                    )
+                ]
+            ),
+            400: OpenApiResponse(
+                response=OpenApiTypes.OBJECT,
+                description="잘못된 요청",
+                examples=[
+                    OpenApiExample(
+                        "Invalid Email",
+                        value={"error": "유효하지 않은 이메일 형식입니다."}
+                    )
+                ]
+            ),
+            404: OpenApiResponse(
+                response=OpenApiTypes.OBJECT,
+                description="사용자를 찾을 수 없음",
+                examples=[
+                    OpenApiExample(
+                        "User Not Found",
+                        value={"error": "해당 이메일로 등록된 사용자가 없습니다."}
+                    )
+                ]
+            )
+        }
     )
     def post(self, request):
         serializer = NewPasswordSerializer(data=request.data)
@@ -360,3 +394,51 @@ class UserProfileRetrieveUpdateView(generics.RetrieveUpdateAPIView):
             return UserProfileSerializer
         # PUT/PATCH 요청 (프로필 수정)시 UserProfileUpdateSerializer 사용
         return UserProfileUpdateSerializer
+
+
+class UserDeleteView(APIView):
+    # 인증된 사용자만 이 뷰에 접근할 수 있도록 설정
+    permission_classes = [permissions.IsAuthenticated]
+
+    @extend_schema(
+        summary='user 계정 정보 삭제',
+        description='일정 기간동안 계정 숨김처리 후 일정기간 도달시 삭제',
+        request=UserDeleteRequestSerializer,
+        responses={200: UserDeleteResponseSerializer}
+    )
+    def post(self, request):
+        # 요청 데이터의 유효성을 검사
+        serializer = UserDeleteRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # 사용자가 계정 삭제를 확인했는지 검사
+        if not serializer.validated_data['confirm']:
+            return Response({"error": "계정 삭제를 확인하지 않았습니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 현재 로그인한 사용자 정보 가져오기
+        user = request.user
+
+        # 사용자 계정 비활성화
+        user.is_active = False
+        # 비활성화 시간 기록
+        user.deactivated_at = timezone.now()
+        # 변경사항 저장
+        user.save()
+
+        # 법적으로 30일 이후 삭제가능하지만 여유시간을 줘서 50일 후 삭제 예정 시간 계산
+        deletion_date = user.deactivated_at + timedelta(days=50)
+
+        #삭제를 수행할 방법 찾아봐야함
+
+        # 응답 데이터 준비
+        response_data = {
+            "message": "계정이 비활성화되었습니다. 30일 후에 완전히 삭제됩니다.",
+            "deletion_date": deletion_date
+        }
+
+        # 응답 데이터 직렬화
+        response_serializer = UserDeleteResponseSerializer(data=response_data)
+        response_serializer.is_valid()
+
+        # 직렬화된 데이터로 응답
+        return Response(response_serializer.data, status=status.HTTP_200_OK)
