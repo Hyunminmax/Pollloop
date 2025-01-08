@@ -2,7 +2,7 @@ from django.urls import path
 from .views import (
     FormCreateView, FormListView, FormView, 
     FormInvitedView, FormSubmitView, FromSummaryView, 
-    FromDataView, FormCompletedUserView
+    FromDataView, FormCompletedUserView, FormBookmarkView
 )
 
 urlpatterns = [
@@ -14,4 +14,5 @@ urlpatterns = [
     path('summary/users/uuid:<slug:uuid>', FormCompletedUserView.as_view(), name='FormCompletedUser'),
     path('submit/', FormSubmitView.as_view(), name='FormSubmit'),
     path('list/user_id:<user_id>/', FormListView.as_view(), name='FormList'),
+    path('list/bookmark/', FormBookmarkView.as_view(), name='FormBookmark'),
 ]

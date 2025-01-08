@@ -1,10 +1,11 @@
+from django.shortcuts import get_object_or_404
 from .models import Form, Respondent
 from user.models import CustomUser
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import (
-    FormListSerializer, FormSerializer, FormInvitedSerializer, 
+    FormBookmarkSerializer, FormListSerializer, FormSerializer, FormInvitedSerializer, 
     FormSubmitSerializer, FormSummarySerializer, FromDataSerializer,
     FormCompletedUserSerializer
 )
@@ -528,6 +529,49 @@ class FormCompletedUserView(APIView):
         serializer = FormCompletedUserSerializer(respondents, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
         
+class FormBookmarkView(APIView):
+    @extend_schema(
+            summary="폼 즐겨찾기 수정 For011",
+            description="폼 목록에서 즐겨찾기 설정하는 경우",
+            request=FormInvitedSerializer,
+            examples=[
+                OpenApiExample(
+                    name= 'Example Request 즐겨찾기 설정',
+                    value= {
+                        'uuid': '2bd64b2e1364441b9840020039906fe4',
+                        "is_bookmark": True, 
+                        "user": 1,  
+                    },
+                    description="폼 생성 데이터 user값은 토큰에서 추출하는 것으로 변경 예정"
+                ),
+                OpenApiExample(
+                    name= 'Example Request 즐겨찾기 해제',
+                    value= {
+                        'uuid': '2bd64b2e1364441b9840020039906fe4',
+                        "is_bookmark": False, 
+                        "user": 1,  
+                    },
+                    description="설정, 해제 총 두 가지 예제가 있습니다. / 폼 생성 데이터 user값은 토큰에서 추출하는 것으로 변경 예정"
+                ),
+            ],
+            responses={
+                    201: "폼 정보가 성공적으로 제출됨",
+                    400: "잘못된 요청 (UUID 누락)",
+            },
+    )
+    def post(self, request, *args, **kwargs):
+        serializer = FormBookmarkSerializer(data=request.data)
+        if serializer.is_valid():
+            # 인증 적용후 사용자 정보 확인 부분 삭제 예정
+            form = get_object_or_404(Form, uuid=serializer.validated_data['uuid'], user=serializer.validated_data['user'])
+
+            form.is_bookmark = serializer.validated_data['is_bookmark']
+            form.save()
+            
+            return Response(status=status.HTTP_202_ACCEPTED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 
