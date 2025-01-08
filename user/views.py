@@ -380,20 +380,57 @@ class SetNewPasswordView(APIView):
 
 
 # user profile 관리 페이지
-class UserProfileRetrieveUpdateView(generics.RetrieveUpdateAPIView):
+
+class UserProfileRetrieveUpdateView(generics.RetrieveAPIView):
     queryset = CustomUser.objects.all()
-    permission_classes = [permissions.IsAuthenticated]  # 인증된 사용자만 접근 가능
+    permission_classes = [permissions.IsAuthenticated]
+
+    @extend_schema(
+        summary="사용자 프로필 조회",
+        description="현재 로그인한 사용자의 프로필 정보를 조회합니다.",
+        responses={200: UserProfileSerializer},
+        tags=["프로필"]
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    @extend_schema(
+        summary="사용자 프로필 수정",
+        description="현재 로그인한 사용자의 프로필 정보를 수정합니다.",
+        request=UserProfileUpdateSerializer,
+        responses={
+            200: OpenApiResponse(response=UserProfileSerializer, description="프로필 수정 성공"),
+            400: OpenApiResponse(description="잘못된 요청"),
+        },
+        examples=[
+            OpenApiExample(
+                "프로필 수정 예시",
+                value={
+                    "phone_number": "010xxxxxxxx",
+                    "profile": "str"
+                },
+                request_only=True
+            )
+        ],
+        tags=["프로필"]
+    )
+    def post(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
 
     def get_object(self):
-        # 현재 로그인한 사용자의 프로필을 반환
         return self.request.user.userprofile
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
-            # GET 요청 (프로필 조회)시 UserProfileSerializer 사용
             return UserProfileSerializer
-        # PUT/PATCH 요청 (프로필 수정)시 UserProfileUpdateSerializer 사용
         return UserProfileUpdateSerializer
+
+    def perform_update(self, serializer):
+        serializer.save()
 
 
 class UserDeleteView(APIView):
