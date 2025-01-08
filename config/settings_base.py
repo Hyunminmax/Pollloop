@@ -44,6 +44,7 @@ CUSTOM_APPS = [
     'drf_spectacular',
     'drf_spectacular_sidecar',
     'rest_framework_simplejwt',
+    'django_crontab',
 ]
 
 SYSTEM_APPS = [
@@ -228,3 +229,7 @@ SIMPLE_JWT = {
 KAKAO_REST_API_KEY = ENV.get('KAKAO_REST_API_KEY')
 KAKAO_REDIRECT_URI = ENV.get('KAKAO_REDIRECT_URI')
 
+# cron 작업들을 정의
+CRONJOBS = [
+    ('0 0 * * *', 'django.core.management.call_command', ['delete_withdrawn_users'])
+]

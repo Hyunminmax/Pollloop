@@ -18,4 +18,5 @@ urlpatterns = [
 
     # Profile
     path('profile/', views.UserProfileRetrieveUpdateView.as_view(), name='user-profile'),
+    path('profile/delete/', views.UserDeleteView.as_view(), name='user-delete'),
 ]

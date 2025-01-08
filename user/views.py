@@ -151,7 +151,6 @@ class UserLoginView(APIView):
 
     @extend_schema(
         summary="사용자 로그인",
-        tags=["Kakao Social"],
         description="사용자 인증 및 JWT 토큰 발급",
         request={
             'application/json': {
@@ -194,7 +193,8 @@ class KakaoLoginView(APIView):
     @extend_schema(
         summary="카카오 로그인 URL 요청",
         description="카카오 로그인을 위한 인증 URL을 반환합니다.",
-        responses={200: OpenApiTypes.OBJECT}
+        responses={200: OpenApiTypes.OBJECT},
+        tags=["Kakao Social"],
     )
     def get(self, request):
         # 카카오 로그인 URL 생성
@@ -436,47 +436,34 @@ class UserProfileRetrieveUpdateView(generics.RetrieveAPIView):
 
 
 class UserDeleteView(APIView):
-    # 인증된 사용자만 이 뷰에 접근할 수 있도록 설정
     permission_classes = [permissions.IsAuthenticated]
 
     @extend_schema(
-        summary='user 계정 정보 삭제',
-        description='일정 기간동안 계정 숨김처리 후 일정기간 도달시 삭제',
+        summary='user 계정 정보 삭제 요청',
+        description='계정 탈퇴를 요청하고 50일 후 삭제 예정',
         request=UserDeleteRequestSerializer,
         responses={200: UserDeleteResponseSerializer}
     )
     def post(self, request):
-        # 요청 데이터의 유효성을 검사
         serializer = UserDeleteRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        # 사용자가 계정 삭제를 확인했는지 검사
         if not serializer.validated_data['confirm']:
             return Response({"error": "계정 삭제를 확인하지 않았습니다."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 현재 로그인한 사용자 정보 가져오기
         user = request.user
-        # 사용자 계정 비활성화
+        user.withdraw_at = timezone.now()
         user.is_active = False
-        # 비활성화 시간 기록
-        user.deactivated_at = timezone.now()
-        # 변경사항 저장
         user.save()
 
-        # 법적으로 30일 이후 삭제가능하지만 여유시간을 줘서 50일 후 삭제 예정 시간 계산
-        deletion_date = user.deactivated_at + timedelta(days=50)
+        deletion_date = user.withdraw_at + timedelta(days=50)
 
-        #삭제를 수행할 방법 찾아봐야함
-
-        # 응답 데이터 준비
         response_data = {
-            "message": "계정이 비활성화되었습니다. 30일 후에 완전히 삭제됩니다.",
+            "message": "계정 탈퇴가 요청되었습니다. 50일 후에 완전히 삭제됩니다.",
             "deletion_date": deletion_date
         }
 
-        # 응답 데이터 직렬화
         response_serializer = UserDeleteResponseSerializer(data=response_data)
         response_serializer.is_valid()
 
-        # 직렬화된 데이터로 응답
         return Response(response_serializer.data, status=status.HTTP_200_OK)
