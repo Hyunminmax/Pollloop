@@ -45,6 +45,17 @@ files = [
 ]
 
 [[package]]
+name = "chardet"
+version = "5.2.0"
+description = "Universal encoding detector for Python 3"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "chardet-5.2.0-py3-none-any.whl", hash = "sha256:e1cf59446890a00105fe7b7912492ea04b6e6f06d4b742b2c788469e34c82970"},
+    {file = "chardet-5.2.0.tar.gz", hash = "sha256:1b3b6ff479a8c414bc3fa2c0852995695c4a026dcd6d0633b2dd092ca39c1cf7"},
+]
+
+[[package]]
 name = "charset-normalizer"
 version = "3.4.1"
 description = "The Real First Universal Charset Detector. Open, modern and actively maintained alternative to Chardet."
@@ -165,7 +176,7 @@ tzdata = {version = "*", markers = "sys_platform == \"win32\""}
 argon2 = ["argon2-cffi (>=19.1.0)"]
 bcrypt = ["bcrypt"]
 
-[[package]]     # 주기적인 작업을 예약하고 실행하기 위한 패키지 -> 회원탈퇴기능
+[[package]]
 name = "django-crontab"
 version = "0.7.1"
 description = "dead simple crontab powered job scheduling for django"
@@ -194,18 +205,18 @@ django = ">=4.2"
 
 [[package]]
 name = "djangorestframework-simplejwt"
-version = "5.3.1"
+version = "5.4.0"
 description = "A minimal JSON Web Token authentication plugin for Django REST Framework"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 files = [
-    {file = "djangorestframework_simplejwt-5.3.1-py3-none-any.whl", hash = "sha256:381bc966aa46913905629d472cd72ad45faa265509764e20ffd440164c88d220"},
-    {file = "djangorestframework_simplejwt-5.3.1.tar.gz", hash = "sha256:6c4bd37537440bc439564ebf7d6085e74c5411485197073f508ebdfa34bc9fae"},
+    {file = "djangorestframework_simplejwt-5.4.0-py3-none-any.whl", hash = "sha256:7aec953db9ed4163430c16d086eecb0f028f814ce6bba62b06c25919261e9077"},
+    {file = "djangorestframework_simplejwt-5.4.0.tar.gz", hash = "sha256:cccecce1a0e1a4a240fae80da73e5fc23055bababb8b67de88fa47cd36822320"},
 ]
 
 [package.dependencies]
-django = ">=3.2"
-djangorestframework = ">=3.12"
+django = ">=4.2"
+djangorestframework = ">=3.14"
 pyjwt = ">=1.7.1,<3"
 
 [package.extras]
@@ -714,4 +725,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "d597018ffc6fc8ff4278e455dbed9526092a5154f8bbca5905f67d4106ae45ed"
+content-hash = "3688af7fe32ca43a342e17149057d027f41be6486869bba4bec72c4861a266d8"

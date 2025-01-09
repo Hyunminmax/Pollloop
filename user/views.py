@@ -10,6 +10,7 @@ from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample, OpenApiResponse
+# from jsonschema.benchmarks.const_vs_enum import value
 from rest_framework import status, generics, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -186,37 +187,39 @@ class UserLoginView(APIView):
         }, status=status.HTTP_400_BAD_REQUEST)
 
 
-# 카카오 로그인 URL을 제공하는 뷰
-class KakaoLoginView(APIView):
-    permission_classes = [AllowAny]  # 누구나 접근 가능
-
-    @extend_schema(
-        summary="카카오 로그인 URL 요청",
-        description="카카오 로그인을 위한 인증 URL을 반환합니다.",
-        responses={200: OpenApiTypes.OBJECT},
-        tags=["Kakao Social"],
-    )
-    def get(self, request):
-        # 카카오 로그인 URL 생성
-        kakao_auth_url = f"https://kauth.kakao.com/oauth/authorize?client_id={settings.KAKAO_REST_API_KEY}&redirect_uri={settings.KAKAO_REDIRECT_URI}&response_type=code"
-        return Response({"auth_url": kakao_auth_url})
-
+# 카카오 로그인 URL을 제공하는 뷰 ->  프론트에서 관리하기로 함
+# class KakaoLoginView(APIView):
+#     permission_classes = [AllowAny]  # 누구나 접근 가능
+#
+#     @extend_schema(
+#         summary="카카오 로그인 URL 요청",
+#         description="카카오 로그인을 위한 인증 URL을 반환합니다.",
+#         responses={200: OpenApiTypes.OBJECT},
+#         tags=["Kakao Social"],
+#     )
+#     def get(self, request):
+#         # 카카오 로그인 URL 생성
+#         kakao_auth_url = f"https://kauth.kakao.com/oauth/authorize?client_id={settings.KAKAO_REST_API_KEY}&redirect_uri={settings.KAKAO_REDIRECT_URI}&response_type=code"
+#         return Response({"auth_url": kakao_auth_url})
+#
 
 # 카카오 로그인 콜백을 처리하는 뷰
 class KakaoCallbackView(APIView):
-    permission_classes = [AllowAny]  # 누구나 접근 가능
+    permission_classes = [AllowAny]  # 누구나 접근 가능하도록 설정
 
     @extend_schema(
         summary="카카오 로그인 콜백 처리",
         description="카카오 로그인 후 받은 코드로 사용자 정보를 조회하고 로그인 처리합니다.",
-        parameters=[
-            OpenApiParameter(name='code', description='카카오 인증 코드', required=True, type=str)
-        ],
-        responses={200: UserSerializer},
-        tags=["Kakao Social"],
+        request=KakaoAuthSerializer,  # POST 요청의 body를 정의
+        responses={200: UserSerializer},  # 성공 시 반환할 데이터 형식
+        tags=["Kakao Social"],  # API 문서화를 위한 태그
     )
-    def get(self, request):
-        code = request.GET.get('code')
+    def post(self, request):
+        # 요청 본문에서 인증 코드 추출
+        code = request.data.get('code')
+
+        if not code:
+            return Response({"error": "인증 코드가 제공되지 않았습니다."}, status=400)
 
         # 카카오 액세스 토큰 요청
         token_req = requests.post(
@@ -230,6 +233,9 @@ class KakaoCallbackView(APIView):
         )
         token_req_json = token_req.json()
         access_token = token_req_json.get("access_token")
+
+        if not access_token:
+            return Response({"error": "액세스 토큰을 받아오는데 실패했습니다."}, status=400)
 
         # 카카오 사용자 정보 요청
         profile_request = requests.get(
@@ -257,6 +263,7 @@ class KakaoCallbackView(APIView):
         user.refresh_token = str(refresh)
         user.save()
 
+        # 사용자 정보와 토큰 반환
         return Response({
             "user": UserSerializer(user).data,
             "access_token": str(refresh.access_token),
@@ -408,7 +415,9 @@ class UserProfileRetrieveUpdateView(generics.RetrieveAPIView):
             OpenApiExample(
                 "프로필 수정 예시",
                 value={
-                    "phone_number": "010xxxxxxxx",
+                    "email": "user@email.com",
+                    "username": "user",     # null값으로 지정 되어 필수 x
+                    "userphone_num": "01012341234",
                     "profile": "str"
                 },
                 request_only=True
@@ -442,8 +451,19 @@ class UserDeleteView(APIView):
         summary='user 계정 정보 삭제 요청',
         description='계정 탈퇴를 요청하고 50일 후 삭제 예정',
         request=UserDeleteRequestSerializer,
-        responses={200: UserDeleteResponseSerializer}
+        responses={200: UserDeleteResponseSerializer},
+        tags=["프로필"],
+        examples=[
+            OpenApiExample("user탈퇴(삭제) 입력예시",
+            value={
+                "email": "user@email.com",
+                "password": "password",
+                },
+                request_only=True
+            )
+        ]
     )
+
     def post(self, request):
         serializer = UserDeleteRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

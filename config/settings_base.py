@@ -233,3 +233,32 @@ KAKAO_REDIRECT_URI = ENV.get('KAKAO_REDIRECT_URI')
 CRONJOBS = [
     ('0 0 * * *', 'django.core.management.call_command', ['delete_withdrawn_users'])
 ]
+#
+# FRONTEND_URL = 'http://localhost:3000'
+#
+# # config/settings.py
+#
+# # 이메일 설정
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'your-email@gmail.com'
+# EMAIL_HOST_PASSWORD = 'your-app-password'
+#
+# # config/settings.py
+#
+# # 개발 환경에서만 사용
+# if DEBUG:
+#     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+#
+#
+# # config/settings.py
+#
+# import os
+# from dotenv import load_dotenv
+#
+# load_dotenv()
+#
+# EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+# EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
