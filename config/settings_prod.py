@@ -5,6 +5,7 @@ DEBUG = False
 
 ALLOWED_HOSTS = ["43.200.4.153"]
 
+CORS_ALLOW_METHODS = ["GET", "POST"]
 
 # # 보안 설정 추가
 # SECURE_HSTS_SECONDS = 3600

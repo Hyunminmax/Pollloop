@@ -45,6 +45,8 @@ CUSTOM_APPS = [
     'drf_spectacular_sidecar',
     'rest_framework_simplejwt',
     'django_crontab',
+    'storages',
+    "corsheaders",
 ]
 
 SYSTEM_APPS = [
@@ -59,6 +61,7 @@ SYSTEM_APPS = [
 INSTALLED_APPS = CUSTOM_APPS + SYSTEM_APPS
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -163,7 +166,38 @@ USE_TZ = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
+
+STATIC_URL = f'https://{ENV.get('S3_STORAGE_BUCKET_NAME')}.s3.amazonaws.com/static/'
+MEDIA_URL = f'https://{ENV.get('S3_STORAGE_BUCKET_NAME')}.s3.amazonaws.com/media/'
+
+# STORAGES 작성
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            "access_key": ENV.get("S3_ACCESS_KEY"),
+            "secret_key": ENV.get("S3_SECRET_ACCESS_KEY"),
+            "bucket_name": ENV.get("S3_STORAGE_BUCKET_NAME"),
+            "region_name": ENV.get("S3_REGION_NAME"),
+            "location": "media",
+            "default_acl": "public-read",
+            "endpoint_url": "https://s3.ap-northeast-2.amazonaws.com",
+        },
+    },
+    "staticfiles": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            "access_key": ENV.get("S3_ACCESS_KEY"),
+            "secret_key": ENV.get("S3_SECRET_ACCESS_KEY"),
+            "bucket_name": ENV.get("S3_STORAGE_BUCKET_NAME"),
+            "region_name": ENV.get("S3_REGION_NAME"),
+            # "custom_domain": f'{ENV.get("S3_STORAGE_BUCKET_NAME")}.s3.amazonaws.com',
+            "location": "static",
+            "default_acl": "public-read",
+            "endpoint_url": "https://s3.ap-northeast-2.amazonaws.com",
+        },
+    },
+}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
