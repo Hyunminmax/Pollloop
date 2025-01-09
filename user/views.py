@@ -187,20 +187,20 @@ class UserLoginView(APIView):
 
 
 # 카카오 로그인 URL을 제공하는 뷰
-class KakaoLoginView(APIView):
-    permission_classes = [AllowAny]  # 누구나 접근 가능
-
-    @extend_schema(
-        summary="카카오 로그인 URL 요청",
-        description="카카오 로그인을 위한 인증 URL을 반환합니다.",
-        responses={200: OpenApiTypes.OBJECT},
-        tags=["Kakao Social"],
-    )
-    def get(self, request):
-        # 카카오 로그인 URL 생성
-        kakao_auth_url = f"https://kauth.kakao.com/oauth/authorize?client_id={settings.KAKAO_REST_API_KEY}&redirect_uri={settings.KAKAO_REDIRECT_URI}&response_type=code"
-        return Response({"auth_url": kakao_auth_url})
-
+# class KakaoLoginView(APIView):
+#     permission_classes = [AllowAny]  # 누구나 접근 가능
+#
+#     @extend_schema(
+#         summary="카카오 로그인 URL 요청",
+#         description="카카오 로그인을 위한 인증 URL을 반환합니다.",
+#         responses={200: OpenApiTypes.OBJECT},
+#         tags=["Kakao Social"],
+#     )
+#     def get(self, request):
+#         # 카카오 로그인 URL 생성
+#         kakao_auth_url = f"https://kauth.kakao.com/oauth/authorize?client_id={settings.KAKAO_REST_API_KEY}&redirect_uri={settings.KAKAO_REDIRECT_URI}&response_type=code"
+#         return Response({"auth_url": kakao_auth_url})
+#
 
 # 카카오 로그인 콜백을 처리하는 뷰
 class KakaoCallbackView(APIView):
