@@ -78,7 +78,7 @@ class LoginSerializer(TokenObtainPairSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ['username', 'email', 'password', 'password2', 'refresh']
+        fields = ['email', 'password', 'password2', 'refresh']
 
 class LogoutSerializer(serializers.Serializer):
     refresh_token = serializers.CharField()
@@ -87,22 +87,21 @@ class LogoutSerializer(serializers.Serializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ('id', 'email', 'username', 'profile', 'age', 'uuid')        # 보안을 위해 password 필드는 제외
+        fields = ('id', 'email', 'profile', 'uuid')        # 보안을 위해 password 필드는 제외
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ('id', 'email', 'username', 'age', 'uuid')
+        fields = ('id', 'email', 'uuid')
 
 class UserProfileUpdateSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(source='user.email')
-    username = serializers.CharField(source='user.username')
 
     class Meta:
         model = CustomUser
-        fields = ['id', 'email', 'username', 'profile', 'age', 'uuid']
+        fields = ['id', 'email', 'profile', 'uuid']
 
     def update(self, instance, validated_data):
         # User 모델 데이터 추출
@@ -182,3 +181,17 @@ class UserDeleteResponseSerializer(serializers.Serializer):
 
 class UserDeleteRequestSerializer(serializers.Serializer):
     confirm = serializers.BooleanField(required=True)
+
+class KakaoAuthSerializer(serializers.Serializer):
+    code = serializers.CharField(required=True, help_text="카카오 인증 코드")
+    access_token = serializers.CharField(read_only=True, help_text="액세스 토큰")
+    refresh_token = serializers.CharField(read_only=True, help_text="리프레시 토큰")
+    user = serializers.SerializerMethodField(help_text="사용자 정보")
+
+    def get_user(self, obj):
+        return {
+            "email": obj.get("email"),
+            "username": obj.get("username"),
+            "name": obj.get("name"),
+            "profile": obj.get("profile")
+        }
