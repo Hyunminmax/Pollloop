@@ -78,7 +78,7 @@ class LoginSerializer(TokenObtainPairSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ['username', 'email', 'password', 'password2', 'refresh']
+        fields = ['email', 'password', 'password2', 'refresh']
 
 class LogoutSerializer(serializers.Serializer):
     refresh_token = serializers.CharField()
@@ -87,22 +87,21 @@ class LogoutSerializer(serializers.Serializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ('id', 'email', 'username', 'profile', 'age', 'uuid')        # 보안을 위해 password 필드는 제외
+        fields = ('id', 'email', 'profile', 'uuid')        # 보안을 위해 password 필드는 제외
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ('id', 'email', 'username', 'age', 'uuid')
+        fields = ('id', 'email', 'uuid')
 
 class UserProfileUpdateSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(source='user.email')
-    username = serializers.CharField(source='user.username')
 
     class Meta:
         model = CustomUser
-        fields = ['id', 'email', 'username', 'profile', 'age', 'uuid']
+        fields = ['id', 'email', 'profile', 'uuid']
 
     def update(self, instance, validated_data):
         # User 모델 데이터 추출

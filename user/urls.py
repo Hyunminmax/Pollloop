@@ -13,7 +13,7 @@ urlpatterns = [
     path('password-reset/confirm/', views.SetNewPasswordView.as_view(), name='password_reset_confirm'),
 
     # Kakao 소셜로그인
-    path('oauth/kakao/login/', views.KakaoLoginView.as_view(), name='kakao_login'),
+    # path('oauth/kakao/login/', views.KakaoLoginView.as_view(), name='kakao_login'),
     path('oauth/kakao/callback/', views.KakaoCallbackView.as_view(), name='kakao_callback'),
 
     # Profile
