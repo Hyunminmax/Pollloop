@@ -146,8 +146,8 @@ class UserRegistrationView(generics.CreateAPIView):
 
 # 사용자 로그인을 처리하는 뷰
 class UserLoginView(APIView):
-    permission_classes = [AllowAny]  # 누구나 접근 가능
-    authentication_classes = []  # 인증 불필요
+    permission_classes = [AllowAny]
+    authentication_classes = []
 
     @extend_schema(
         summary="사용자 로그인",
@@ -168,18 +168,22 @@ class UserLoginView(APIView):
         }
     )
     def post(self, request):
-        serializer = LoginSerializer(data=request.data)
+        serializer = LoginSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             user = serializer.validated_data['user']
-            # JWT 토큰 생성
             refresh = RefreshToken.for_user(user)
+
+            # 리프레시 토큰 저장
+            user.refresh_token = str(refresh)
+            user.save()
+
             return Response({
                 "message": "로그인이 성공적으로 완료되었습니다.",
                 "email": user.email,
-                "username": user.username,
                 "refresh": str(refresh),
                 "access": str(refresh.access_token),
             }, status=status.HTTP_200_OK)
+
         return Response({
             "message": "로그인에 실패하셨습니다.",
             "errors": serializer.errors
