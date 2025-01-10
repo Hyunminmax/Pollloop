@@ -8,7 +8,7 @@ ALLOWED_HOSTS = ["43.200.4.153","*"]
 
 # 실제 서비스에서는 로컬삭제, 5174포트는 방법을 찾아야.
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5174",  # 프론트엔드 도메인
+    "http://localhost:5173",  # 프론트엔드 도메인
     "http://43.200.4.153",    # 백엔드 도메인
     # 배포시
     # "https://fe-three-omega.vercel.app"
