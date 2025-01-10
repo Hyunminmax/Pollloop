@@ -17,7 +17,7 @@ CORS_ALLOWED_ORIGINS = [
     # 3000으로 개발환경 세팅
     "http://localhost:3000",
     # 배포시
-    "https://fe-three-omega.vercel.app"
+    # "https://fe-three-omega.vercel.app"
 ]
 
 CORS_ALLOW_CREDENTIALS = True
