@@ -287,3 +287,16 @@ EMAIL_HOST_PASSWORD = ENV.get('EMAIL_HOST_PASSWORD')
 # 개발 환경에서만 사용
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
