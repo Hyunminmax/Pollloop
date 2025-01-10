@@ -15,7 +15,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from .models import CustomUser
 from .serializers import *
 from datetime import timezone, timedelta
@@ -270,20 +270,20 @@ class KakaoCallbackView(APIView):
 
 # 사용자 로그아웃을 처리하는 뷰
 class LogoutView(APIView):
-    serializer_class = LogoutSerializer
+    authentication_classes = []  # 인증 클래스 제거
+    permission_classes = []  # 권한 클래스 제거
 
-    @extend_schema(
-        summary="사용자 로그아웃",
-        description="사용자의 리프레시 토큰을 무효화합니다.",
-        responses={200: OpenApiTypes.OBJECT}
-    )
     def post(self, request):
-        user = request.user
-        # 리프레시 토큰 무효화
-        user.refresh_token = ""
-        user.save()
-        return Response({"message": "Successfully logged out."}, status=status.HTTP_200_OK)
-
+        try:
+            refresh_token = request.data.get('refresh_token')
+            if refresh_token:
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+                return Response({"message": "로그아웃 되었습니다."}, status=status.HTTP_200_OK)
+            else:
+                return Response({"error": "리프레시 토큰이 제공되지 않았습니다."}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 CustomUser = get_user_model()
 
