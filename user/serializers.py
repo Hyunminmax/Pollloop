@@ -52,33 +52,24 @@ class RegisterSerializer(serializers.ModelSerializer):
         user = CustomUser.objects.create_user(**validated_data)
         return user
 
-class LoginSerializer(TokenObtainPairSerializer):
-    username_field = 'email'
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
 
     def validate(self, attrs):
-        email = attrs.get("email")
-        password = attrs.get("password")
+        email = attrs.get('email')
+        password = attrs.get('password')
 
         if email and password:
-            # 사용자 인증
             user = authenticate(request=self.context.get('request'),
                                 email=email, password=password)
             if not user:
-                raise serializers.ValidationError(INVALID_CREDENTIALS_ERROR)
+                raise serializers.ValidationError("이메일 또는 비밀번호가 올바르지 않습니다.")
+            attrs['user'] = user
+            return attrs
         else:
-            raise serializers.ValidationError(MISSING_FIELDS_ERROR)
+            raise serializers.ValidationError("이메일과 비밀번호를 모두 입력해주세요.")
 
-        # JWT 토큰 생성
-        data = super().validate(attrs)
-        refresh = self.get_token(user)
-        data['refresh'] = str(refresh)
-        data['access'] = str(refresh.access_token)
-        data['user'] = user
-        return data
-
-    class Meta:
-        model = CustomUser
-        fields = ['email', 'password', 'password2', 'refresh']
 
 class LogoutSerializer(serializers.Serializer):
     refresh_token = serializers.CharField()
