@@ -356,8 +356,7 @@ class RequestPasswordResetView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class SetNewPasswordView(APIView):
-    # 새 비밀번호 설정을 처리하는 뷰
-    permission_classes = [AllowAny]
+    permission_classes = [AllowAny]  # 모든 사용자에게 접근 허용
 
     @extend_schema(
         summary="새 비밀번호 설정",
@@ -368,17 +367,18 @@ class SetNewPasswordView(APIView):
     def post(self, request):
         serializer = SetNewPasswordSerializer(data=request.data)
         if serializer.is_valid():
-            uid = serializer.validated_data['uid']
+            uuid = serializer.validated_data['uuid']
             token = serializer.validated_data['token']
             password = serializer.validated_data['new_password']
 
             try:
-                user = CustomUser.objects.get(uuid=uid)
+                user = CustomUser.objects.get(uuid=uuid)
             except CustomUser.DoesNotExist:
                 return Response({'error': '유효하지 않은 사용자입니다.'}, status=status.HTTP_400_BAD_REQUEST)
 
+            # 토큰 유효성 검사
             if default_token_generator.check_token(user, token):
-                user.set_password(password)
+                user.set_password(password)  # 새 비밀번호 설정
                 user.save()
                 return Response({'message': '비밀번호가 성공적으로 재설정되었습니다.'}, status=status.HTTP_200_OK)
             return Response({'error': '유효하지 않은 토큰입니다.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -397,8 +397,8 @@ class UserProfileRetrieveUpdateView(generics.RetrieveAPIView):
         responses={200: UserProfileSerializer},
         tags=["프로필"]
     )
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
+    def get_object(self):
+        return self.request.user
 
     @extend_schema(
         summary="사용자 프로필 수정",
@@ -412,7 +412,6 @@ class UserProfileRetrieveUpdateView(generics.RetrieveAPIView):
             OpenApiExample(
                 "프로필 수정 예시",
                 value={
-                    "phone_number": "010xxxxxxxx",
                     "profile": "str"
                 },
                 request_only=True
@@ -428,7 +427,7 @@ class UserProfileRetrieveUpdateView(generics.RetrieveAPIView):
         return Response(serializer.data)
 
     def get_object(self):
-        return self.request.user.userprofile
+        return self.request.user
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
@@ -446,7 +445,8 @@ class UserDeleteView(APIView):
         summary='user 계정 정보 삭제 요청',
         description='계정 탈퇴를 요청하고 50일 후 삭제 예정',
         request=UserDeleteRequestSerializer,
-        responses={200: UserDeleteResponseSerializer}
+        responses={200: UserDeleteResponseSerializer},
+        tags=["프로필"]
     )
     def post(self, request):
         serializer = UserDeleteRequestSerializer(data=request.data)
