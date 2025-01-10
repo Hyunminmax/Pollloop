@@ -10,6 +10,8 @@ ALLOWED_HOSTS = ["43.200.4.153","*"]
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5174",  # 프론트엔드 도메인
     "http://43.200.4.153",    # 백엔드 도메인
+    # 배포시
+    # "https://fe-three-omega.vercel.app"
 ]
 # 실제 서비스에서 필요한지 테스트 필요
 CORS_ALLOW_CREDENTIALS = True
@@ -23,14 +25,7 @@ CORS_ALLOW_METHODS = ["GET", "POST", "DELETE", "OPTIONS"]
 # SESSION_COOKIE_SECURE = True
 # CSRF_COOKIE_SECURE = True
 
-CORS_ALLOWED_ORIGINS = [
-    # 3000으로 개발환경 세팅
-    "http://localhost:3000",
-    # 배포시
-    # "https://fe-three-omega.vercel.app"
-]
 
-CORS_ALLOW_CREDENTIALS = True
 
 LOGGING = {
     'version': 1,
