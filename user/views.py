@@ -209,7 +209,7 @@ class UserLoginView(APIView):
 
 # 카카오 로그인 콜백을 처리하는 뷰
 class KakaoCallbackView(APIView):
-    permission_classes = [AllowAny]  # 누구나 접근 가능
+    permission_classes = [AllowAny]
 
     @extend_schema(
         summary="카카오 로그인 콜백 처리",
@@ -221,53 +221,61 @@ class KakaoCallbackView(APIView):
         tags=["Kakao Social"],
     )
     def get(self, request):
-        code = request.GET.get('code')
-
-        # 카카오 액세스 토큰 요청
-        token_req = requests.post(
-            "https://kauth.kakao.com/oauth/token",
-            data={
-                "grant_type": "authorization_code",
-                "client_id": settings.KAKAO_REST_API_KEY,
-                "redirect_uri": settings.KAKAO_REDIRECT_URI,
-                "code": code,
-            },
-        )
-        token_req_json = token_req.json()
-        access_token = token_req_json.get("access_token")
-
-        # 카카오 사용자 정보 요청
-        profile_request = requests.get(
-            "https://kapi.kakao.com/v2/user/me",
-            headers={"Authorization": f"Bearer {access_token}"},
-        )
-        profile_json = profile_request.json()
-        kakao_account = profile_json.get("kakao_account")
-
-        # 사용자 생성 또는 조회
         try:
-            # 이미 가입된 사용자인 경우
-            user = CustomUser.objects.get(email=kakao_account.get("email"))
-        except CustomUser.DoesNotExist:
-            # 새로운 사용자 생성
-            user = CustomUser.objects.create(
-                username=kakao_account.get("email").split("@")[0],
+            code = request.GET.get('code')
+            if not code:
+                return Response({"error": "Authorization code is missing"}, status=400)
+
+            # 카카오 액세스 토큰 요청
+            token_req = requests.post(
+                "https://kauth.kakao.com/oauth/token",
+                data={
+                    "grant_type": "authorization_code",
+                    "client_id": settings.KAKAO_REST_API_KEY,
+                    "redirect_uri": settings.KAKAO_REDIRECT_URI,
+                    "code": code,
+                },
+            )
+            token_req_json = token_req.json()
+            if "error" in token_req_json:
+                return Response({"error": token_req_json.get("error_description", "Failed to obtain access token")}, status=400)
+
+            access_token = token_req_json.get("access_token")
+
+            # 카카오 사용자 정보 요청
+            profile_request = requests.get(
+                "https://kapi.kakao.com/v2/user/me",
+                headers={"Authorization": f"Bearer {access_token}"},
+            )
+            profile_json = profile_request.json()
+            kakao_account = profile_json.get("kakao_account")
+
+            if not kakao_account or not kakao_account.get("email"):
+                return Response({"error": "Failed to retrieve user information from Kakao"}, status=400)
+
+            # 사용자 생성 또는 조회
+            user, created = CustomUser.objects.get_or_create(
                 email=kakao_account.get("email"),
-                name=kakao_account.get("profile", {}).get("nickname", ""),
-                profile=kakao_account.get("profile", {}).get("profile_image_url", ""),
+                defaults={
+                    "username": kakao_account.get("email").split("@")[0],
+                    "name": kakao_account.get("profile", {}).get("nickname", ""),
+                    "profile": kakao_account.get("profile", {}).get("profile_image_url", ""),
+                }
             )
 
-        # JWT 토큰 생성
-        refresh = RefreshToken.for_user(user)
-        user.refresh_token = str(refresh)
-        user.save()
+            # JWT 토큰 생성
+            refresh = RefreshToken.for_user(user)
+            user.refresh_token = str(refresh)
+            user.save()
 
-        return Response({
-            "user": UserSerializer(user).data,
-            "access_token": str(refresh.access_token),
-            "refresh_token": str(refresh),
-        })
+            return Response({
+                "user": UserSerializer(user).data,
+                "access_token": str(refresh.access_token),
+                "refresh_token": str(refresh),
+            })
 
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
 
 # 사용자 로그아웃을 처리하는 뷰
 class LogoutView(APIView):
