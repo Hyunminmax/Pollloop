@@ -3,9 +3,19 @@ from .settings_base import *
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["43.200.4.153"]
+# 실제 서비스에서는 수정필요 "*" 삭제
+ALLOWED_HOSTS = ["43.200.4.153","*"]
+
+# 실제 서비스에서는 로컬삭제, 5174포트는 방법을 찾아야.
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5174",  # 프론트엔드 도메인
+    "http://43.200.4.153",    # 백엔드 도메인
+]
+# 실제 서비스에서 필요한지 테스트 필요
+CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOW_METHODS = ["GET", "POST", "DELETE", "OPTIONS"]
+
 
 # # 보안 설정 추가
 # SECURE_HSTS_SECONDS = 3600
