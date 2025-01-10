@@ -44,6 +44,7 @@ CUSTOM_APPS = [
     'drf_spectacular',
     'drf_spectacular_sidecar',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'django_crontab',
     'storages',
     "corsheaders",
@@ -267,3 +268,22 @@ KAKAO_REDIRECT_URI = ENV.get('KAKAO_REDIRECT_URI')
 CRONJOBS = [
     ('0 0 * * *', 'django.core.management.call_command', ['delete_withdrawn_users'])
 ]
+
+FRONTEND_URL = 'http://localhost:5173/'
+
+# config/settings.py
+
+# 이메일 설정
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = ENV.get('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = ENV.get('EMAIL_HOST_PASSWORD')
+
+
+# config/settings.py
+
+# 개발 환경에서만 사용
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
