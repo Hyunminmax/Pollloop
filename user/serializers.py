@@ -127,9 +127,8 @@ class NewPasswordSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
 class SetNewPasswordSerializer(serializers.Serializer):
-    # 새 비밀번호 설정을 위한 시리얼라이저
-    uid = serializers.CharField()  # 사용자 식별자 (UUID)
-    token = serializers.CharField()  # 비밀번호 재설정 토큰
+    uuid = serializers.UUIDField()  # UUID 필드로 변경
+    token = serializers.CharField()
     new_password = serializers.CharField(write_only=True)
     new_password2 = serializers.CharField(write_only=True)
 
@@ -138,10 +137,9 @@ class SetNewPasswordSerializer(serializers.Serializer):
         if data["new_password"] != data["new_password2"]:
             raise serializers.ValidationError("새 비밀번호가 서로 일치하지 않습니다.")
 
-        # UUID로 사용자 조회
         try:
-            uid = data['uid']
-            user = CustomUser.objects.get(uuid=uid)
+            uuid = data['uuid']
+            user = CustomUser.objects.get(uuid=uuid)
         except CustomUser.DoesNotExist:
             raise serializers.ValidationError("유효하지 않은 사용자입니다.")
 
@@ -157,7 +155,6 @@ class SetNewPasswordSerializer(serializers.Serializer):
             raise serializers.ValidationError(str(e))
 
         return data
-
     """
     1. 사용자가 비밀번호 재설정 요청
     2. 사용자 이메일로 재설정 링크 전송
