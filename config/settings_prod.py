@@ -14,6 +14,8 @@ CORS_ALLOWED_ORIGINS = [
 # 실제 서비스에서 필요한지 테스트 필요
 CORS_ALLOW_CREDENTIALS = True
 
+CORS_ALLOW_METHODS = ["GET", "POST", "DELETE", "OPTIONS"]
+
 
 # # 보안 설정 추가
 # SECURE_HSTS_SECONDS = 3600
@@ -21,6 +23,14 @@ CORS_ALLOW_CREDENTIALS = True
 # SESSION_COOKIE_SECURE = True
 # CSRF_COOKIE_SECURE = True
 
+CORS_ALLOWED_ORIGINS = [
+    # 3000으로 개발환경 세팅
+    "http://localhost:3000",
+    # 배포시
+    "https://fe-three-omega.vercel.app"
+]
+
+CORS_ALLOW_CREDENTIALS = True
 
 LOGGING = {
     'version': 1,
