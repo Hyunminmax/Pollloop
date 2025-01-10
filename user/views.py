@@ -179,6 +179,7 @@ class UserLoginView(APIView):
 
             return Response({
                 "message": "로그인이 성공적으로 완료되었습니다.",
+                "uuid": user.uuid,
                 "email": user.email,
                 "refresh": str(refresh),
                 "access": str(refresh.access_token),
