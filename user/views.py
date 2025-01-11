@@ -226,9 +226,9 @@ class KakaoCallbackView(APIView):
             if not code:
                 return Response({"error": "Authorization code is missing"}, status=400)
 
-            headers = {
-                'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'
-            }
+            # headers = {
+            #     'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'
+            # }
             # 카카오 액세스 토큰 요청
             token_req = requests.post(
                 "https://kauth.kakao.com/oauth/token",
