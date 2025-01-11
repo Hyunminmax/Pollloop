@@ -269,7 +269,7 @@ CRONJOBS = [
     ('0 0 * * *', 'django.core.management.call_command', ['delete_withdrawn_users'])
 ]
 
-FRONTEND_URL = 'http://localhost:5173/'
+FRONTEND_URL = 'http://localhost:5173'
 
 # config/settings.py
 
