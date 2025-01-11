@@ -261,8 +261,8 @@ SIMPLE_JWT = {
 
 
 # 카카오 소셜 로그인 설정
-KAKAO_REST_API_KEY = ENV.get('KAKAO_REST_API_KEY')
-KAKAO_REDIRECT_URI = ENV.get('KAKAO_REDIRECT_URI')
+KAKAO_REST_API_KEY = ENV.get('KAKAO_REST_API_KEY', 'default_value')
+KAKAO_REDIRECT_URI = ENV.get('KAKAO_REDIRECT_URI', 'default_redirect_uri')
 
 # cron 작업들을 정의
 CRONJOBS = [
