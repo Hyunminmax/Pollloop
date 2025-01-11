@@ -221,6 +221,9 @@ class KakaoCallbackView(APIView):
         tags=["Kakao Social"],
     )
     def get(self, request):
+        # API 설정 검증 수행
+        if not settings.KAKAO_REST_API_KEY or not settings.KAKAO_REDIRECT_URI:
+            raise ValueError("Kakao API settings are not properly configured")
         try:
             code = request.GET.get('code')
             if not code:
