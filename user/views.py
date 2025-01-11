@@ -205,7 +205,7 @@ class UserLoginView(APIView):
 #         # 카카오 로그인 URL 생성
 #         kakao_auth_url = f"https://kauth.kakao.com/oauth/authorize?client_id={settings.KAKAO_REST_API_KEY}&redirect_uri={settings.KAKAO_REDIRECT_URI}&response_type=code"
 #         return Response({"auth_url": kakao_auth_url})
-#
+
 
 # 카카오 로그인 콜백을 처리하는 뷰
 class KakaoCallbackView(APIView):
@@ -226,6 +226,9 @@ class KakaoCallbackView(APIView):
             if not code:
                 return Response({"error": "Authorization code is missing"}, status=400)
 
+            headers = {
+                'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'
+            }
             # 카카오 액세스 토큰 요청
             token_req = requests.post(
                 "https://kauth.kakao.com/oauth/token",
