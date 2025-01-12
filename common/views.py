@@ -3,6 +3,7 @@ from django.conf import settings
 from django.utils.text import slugify
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
 class InputImage(APIView):
 
     def post(self, request):
