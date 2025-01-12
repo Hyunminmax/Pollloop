@@ -148,6 +148,7 @@ SPECTACULAR_SETTINGS = {
     'TITLE': 'Pollloop',
     'DESCRIPTION': '폼!폼! 뿌린!',
     'VERSION': '1.0.0',
+    'COMPONENT_SPLIT_REQUEST': True,  # 요청과 응답 스키마 분리
     'SERVE_INCLUDE_SCHEMA': False,  # 스키마 엔드포인트를 포함하지 않도록 설정
 }   # '/api/schema/' 숨김처리
 
@@ -163,6 +164,11 @@ USE_I18N = True
 
 USE_TZ = False
 
+# AWS S3
+S3_ACCESS_KEY = ENV.get('S3_ACCESS_KEY')
+S3_SECRET_ACCESS_KEY = ENV.get('S3_SECRET_ACCESS_KEY')
+S3_STORAGE_BUCKET_NAME = ENV.get('S3_STORAGE_BUCKET_NAME')
+S3_REGION_NAME = ENV.get('S3_REGION_NAME')
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
