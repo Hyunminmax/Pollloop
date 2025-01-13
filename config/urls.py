@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from common.views import InputFile
 
 urlpatterns = [
     path('api/swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
@@ -28,5 +29,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('form/', include('form.urls')),
     path('user/', include('user.urls')),
-    path('inputfile/', include('common.urls')),
+    path('inputfile/', InputFile.as_view(), name='InputFile'),
 ]
