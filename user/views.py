@@ -1,3 +1,4 @@
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django.core.mail import send_mail
@@ -10,10 +11,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny, IsAuthenticated
+
+from common.views import *
 from .models import CustomUser
 from .serializers import *
-from datetime import timedelta, datetime
-from zoneinfo import ZoneInfo
+from datetime import timedelta
+from django.utils import timezone
 import requests
 
 
@@ -170,6 +173,7 @@ class UserLoginView(APIView):
 
             # 리프레시 토큰 저장
             user.refresh_token = str(refresh)
+            user.last_login = timezone.now()
             user.save()
 
             return Response({
@@ -268,6 +272,7 @@ class KakaoCallbackView(APIView):
             # JWT 토큰 생성
             refresh = RefreshToken.for_user(user)
             user.refresh_token = str(refresh)
+            user.last_login = timezone.now()
             user.save()
 
             return Response({
@@ -408,8 +413,8 @@ class UserProfileRetrieveUpdateView(generics.RetrieveAPIView):
         responses={200: UserProfileSerializer},
         tags=["프로필"]
     )
-    def get_object(self):
-        return self.request.user
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
 
     @extend_schema(
         summary="사용자 프로필 수정",
@@ -423,7 +428,9 @@ class UserProfileRetrieveUpdateView(generics.RetrieveAPIView):
             OpenApiExample(
                 "프로필 수정 예시",
                 value={
-                    "profile": "str"
+                    "uuid": "user.uuid",
+                    "email": "user.email",
+                    "profile": "file"
                 },
                 request_only=True
             )
@@ -434,6 +441,41 @@ class UserProfileRetrieveUpdateView(generics.RetrieveAPIView):
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
+
+        profile = request.FILES.get('profile')
+        if profile:
+            # InputFileSerializer를 사용하여 파일 업로드 처리
+            file_data = {
+                'input_source': 'profile',
+                'user': str(request.user.id),
+                'file': profile
+            }
+            file_serializer = InputFileSerializer(data=file_data)
+
+            if file_serializer.is_valid():
+                # S3 설정
+                region_name = settings.S3_REGION_NAME
+                bucket_name = settings.S3_STORAGE_BUCKET_NAME
+
+                # S3 클라이언트 초기화
+                s3_client = boto3.client(
+                    "s3",
+                    aws_access_key_id=settings.S3_ACCESS_KEY,
+                    aws_secret_access_key=settings.S3_SECRET_ACCESS_KEY,
+                    region_name=region_name,
+                )
+
+                # S3 키 생성
+                S3_key = f"profile/{str(request.user.id)}/{profile.name}"
+
+                # 파일 업로드 및 URL 받기
+                file_url = upload_file(s3_client, bucket_name, region_name, 'profile', S3_key, profile)
+
+                # 프로필 URL 업데이트
+                serializer.validated_data['profile'] = file_url
+            else:
+                return Response(file_serializer.errors, status=400)
+
         self.perform_update(serializer)
         return Response(serializer.data)
 
@@ -447,7 +489,6 @@ class UserProfileRetrieveUpdateView(generics.RetrieveAPIView):
 
     def perform_update(self, serializer):
         serializer.save()
-
 
 class UserDeleteView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -463,18 +504,13 @@ class UserDeleteView(APIView):
         serializer = UserDeleteRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        # 이메일과 비밀번호 확인
-        user = authenticate(email=serializer.validated_data['email'], password=serializer.validated_data['password'])
-        if user is None or user != request.user:
-            return Response({"error": "이메일 또는 비밀번호가 올바르지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
+        user = self.request.user
 
         if not serializer.validated_data['confirm']:
             return Response({"error": "계정 삭제를 확인하지 않았습니다."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 한국 시간대 설정
-        kst = ZoneInfo("Asia/Seoul")
-        user_withdraw_at = datetime.now(kst)
-        deletion_date = user_withdraw_at + timedelta(days=50)
+        user.withdraw_at = timezone.now()
+        deletion_date = user.withdraw_at + timedelta(days=50)
         user.is_active = False
         user.save()
 

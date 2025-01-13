@@ -82,13 +82,13 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = CustomUser
-        fields = ('id', 'email', 'uuid')
+        fields = ('id', 'email', 'uuid', 'profile')
 
 class UserProfileUpdateSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(source='user.email')
+    email = serializers.EmailField(required=False)
+    profile = serializers.ImageField(required=False)
 
     class Meta:
         model = CustomUser
@@ -169,5 +169,4 @@ class UserDeleteResponseSerializer(serializers.Serializer):
 
 class UserDeleteRequestSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
-    password = serializers.CharField(required=True, write_only=True)
     confirm = serializers.BooleanField(required=True)
