@@ -13,7 +13,7 @@ urlpatterns = [
     path('summary/data/uuid:<slug:uuid>', FromDataView.as_view(), name='FormData'),
     path('summary/users/uuid:<slug:uuid>', FormCompletedUserView.as_view(), name='FormCompletedUser'),
     path('submit/', FormSubmitView.as_view(), name='FormSubmit'),
-    path('list/user_id:<user_id>/', FormListView.as_view(), name='FormList'),
+    path('list/', FormListView.as_view(), name='FormList'),
     path('list/bookmark/', FormBookmarkView.as_view(), name='FormBookmark'),
     path('list/remove/', FromRemoveView.as_view(), name='FormRemove'),
 ]

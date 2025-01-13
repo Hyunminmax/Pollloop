@@ -1,3 +1,5 @@
+import email
+from os import read
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from .models import *
@@ -15,7 +17,7 @@ class UUIDHypenRemoveMixin:
 # 폼 참여인원 시리얼라이저
 class FormInvitedSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(write_only=True)
-    user = serializers.IntegerField(write_only=True)
+    user = serializers.IntegerField(read_only=True)
     
     class Meta:
         model = Respondent
@@ -26,12 +28,13 @@ class FormInvitedSerializer(serializers.ModelSerializer):
         return form
     
     def validate_user(self, value):
-        user = get_object_or_404(CustomUser, id=value)
+        user = get_object_or_404(CustomUser, email=value)
         return user
     
     def create(self, validated_data):
+        
         form = validated_data['uuid']
-        user = validated_data['user']
+        user = self.context['request'].user
         # form, user 정보로 기존 참여자가 있는지 조회
         existing_respondent = Respondent.objects.filter(user=user, form=form).first()
         # 기존 참여자면 참여자 정보 반환
@@ -92,6 +95,7 @@ class QuestionsReadSerializer(serializers.ModelSerializer):
             ]
 # 폼 시리얼라이저
 class FormSerializer(UUIDHypenRemoveMixin, serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
     # Form의 관계 설정 Form은 Questions를 가질수 있지만 필수는 아니다. 생성 후 바로 임시저장의 경우 질문 없음.
     questions = QuestionsSerializer(many=True, required=False)
     
@@ -117,6 +121,7 @@ class FormSerializer(UUIDHypenRemoveMixin, serializers.ModelSerializer):
     def create(self, validated_data):
         # questions 만들기 위해 questions을 분리한다. 없다면 빈 리스트반환
         questions_data = validated_data.pop('questions', [])
+        validated_data['user'] = self.context['request'].user
         form = Form.objects.create(**validated_data)
         # 질문 생성
         for question_data in questions_data:
@@ -248,14 +253,14 @@ class FromDataSerializer(UUIDHypenRemoveMixin, serializers.ModelSerializer):
 
 # 폼 제출 시리얼라이저
 class FormSubmitSerializer(serializers.Serializer):
-    user = serializers.IntegerField(write_only=True)
+    user = serializers.IntegerField(read_only=True)
     uuid = serializers.UUIDField(write_only=True)
     questions = serializers.ListField(child=serializers.DictField(), write_only=True)
 
     def validate(self, data):
         # 폼, 사용자 확인
         form = get_object_or_404(Form, uuid=data['uuid'])
-        user = get_object_or_404(CustomUser, id=data['user'])
+        user = self.context['request'].user
         data['form']=form
         data['user']=user
         return data
@@ -264,10 +269,13 @@ class FormSubmitSerializer(serializers.Serializer):
         form = validated_data['form']
         user = validated_data['user']
         # 제출자 등록 호출 FormInvitedSerializer 이용
-        form_invited_serializer = FormInvitedSerializer(data={
-            'uuid' : form.uuid,
-            'user' : user.id
-        })
+        form_invited_serializer = FormInvitedSerializer(
+            data={
+                'uuid' : form.uuid,
+                'user' : user.email
+            },
+            context=self.context
+        )
         form_invited_serializer.is_valid(raise_exception=True)
         respondent, created = form_invited_serializer.create(form_invited_serializer.validated_data)
 
@@ -347,18 +355,16 @@ class FormCompletedUserSerializer(UUIDHypenRemoveMixin, serializers.ModelSeriali
 class FormBookmarkSerializer(serializers.Serializer):
     uuid = serializers.UUIDField()
     is_bookmark = serializers.BooleanField()
-    # 인증 적용후 삭제 예정
-    user = serializers.IntegerField()
+    
 
 # 폼 삭제
 class FromRemoveSerializer(serializers.Serializer):
     # 첫 시도는 ModelSerializer를 상속받아 시도했지만 기존데이터와 충돌?이 발생하며 삭제하지 못한다. 
     uuid = serializers.UUIDField()
-    user = serializers.IntegerField()
-    
+        
     def delete(self):
         uuid = self.validated_data['uuid']
-        user = self.validated_data['user']
+        user = self.context['request'].user
         form = get_object_or_404(Form, uuid=uuid, user=user)
         form.delete()
         return True
