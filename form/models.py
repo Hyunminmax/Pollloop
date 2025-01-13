@@ -11,13 +11,13 @@ class Form(models.Model):
 
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     title = models.CharField(max_length=255, verbose_name="제목")
-    tag = models.CharField(max_length=255, verbose_name="태그")
+    tag = models.CharField(max_length=255, verbose_name="태그", blank=True, null=True)
     create_at = models.DateField(auto_now_add=True)
     end_at = models.DateField()
     is_closed = models.CharField(choices=STATUS_CHOICES,max_length=20,  help_text="상태") #ENUM값으로 변경해야함
     access_code = models.CharField(max_length=255, verbose_name="입장코드", null=True, blank=True)
     subtitle = models.CharField(max_length=255, verbose_name="부 제목")
-    form_description = models.CharField(max_length=255, help_text="상세 내용")
+    form_description = models.CharField(max_length=255, help_text="상세 내용", blank=True, null=True)
     uuid = models.UUIDField(default=uuid_lib.uuid4, unique=True)
     target_count = models.IntegerField(default=0)
     is_private = models.BooleanField(default=False) # 기본 값 false = 공개
