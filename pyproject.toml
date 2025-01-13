@@ -21,6 +21,7 @@ poetry = "1.8.4"
 django-storages = "^1.14.4"
 boto3 = "^1.35.95"
 django-cors-headers = "^4.6.0"
+datetime = "^5.5"
 
 
 
