@@ -168,4 +168,6 @@ class UserDeleteResponseSerializer(serializers.Serializer):
     deletion_date = serializers.DateTimeField()
 
 class UserDeleteRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+    password = serializers.CharField(required=True, write_only=True)
     confirm = serializers.BooleanField(required=True)

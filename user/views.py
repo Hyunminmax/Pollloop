@@ -1,10 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.shortcuts import render, redirect, get_object_or_404
-from django.utils.decorators import method_decorator
-from django.utils.http import urlsafe_base64_decode
-from django.views.decorators.csrf import csrf_exempt
-
-
+from django.shortcuts import get_object_or_404
 from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
@@ -14,13 +9,13 @@ from rest_framework import status, generics, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from .models import CustomUser
 from .serializers import *
-from datetime import timezone, timedelta
+from datetime import timedelta, datetime
+from zoneinfo import ZoneInfo
 import requests
-import uuid
+
 
 
 # 사용자 회원가입을 처리하는 뷰
@@ -459,7 +454,7 @@ class UserDeleteView(APIView):
 
     @extend_schema(
         summary='user 계정 정보 삭제 요청',
-        description='계정 탈퇴를 요청하고 50일 후 삭제 예정',
+        description='이메일과 비밀번호 확인 후 계정 탈퇴를 요청하고 50일 후 삭제 예정(confirm ->유저가 확인 버튼을 눌렀을시에 값 변경)',
         request=UserDeleteRequestSerializer,
         responses={200: UserDeleteResponseSerializer},
         tags=["프로필"]
@@ -468,15 +463,21 @@ class UserDeleteView(APIView):
         serializer = UserDeleteRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        # 이메일과 비밀번호 확인
+        user = authenticate(email=serializer.validated_data['email'], password=serializer.validated_data['password'])
+        if user is None or user != request.user:
+            return Response({"error": "이메일 또는 비밀번호가 올바르지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
+
         if not serializer.validated_data['confirm']:
             return Response({"error": "계정 삭제를 확인하지 않았습니다."}, status=status.HTTP_400_BAD_REQUEST)
 
-        user = request.user
-        user.withdraw_at = timezone.now()
+        # 한국 시간대 설정
+        kst = ZoneInfo("Asia/Seoul")
+        user_withdraw_at = datetime.now(kst)
+        deletion_date = user_withdraw_at + timedelta(days=50)
         user.is_active = False
         user.save()
 
-        deletion_date = user.withdraw_at + timedelta(days=50)
 
         response_data = {
             "message": "계정 탈퇴가 요청되었습니다. 50일 후에 완전히 삭제됩니다.",
