@@ -7,7 +7,7 @@ from rest_framework import status
 from .serializers import (
     FormBookmarkSerializer, FormListSerializer, FormSerializer, FormInvitedSerializer, 
     FormSubmitSerializer, FormSummarySerializer, FromDataSerializer,
-    FormCompletedUserSerializer, FromRemoveSerializer
+    FormCompletedUserSerializer, FromRemoveSerializer, FormReadSerializer
 )
 from uuid import UUID
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
@@ -213,7 +213,7 @@ class FormView(APIView):
         except Form.DoesNotExist:
             return Response({'error': 'Form not found'}, status=status.HTTP_404_NOT_FOUND)
         
-        serializer = FormSerializer(form)
+        serializer = FormReadSerializer(form)
         
         return Response(serializer.data, status=status.HTTP_200_OK)
 
