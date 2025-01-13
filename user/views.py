@@ -400,7 +400,6 @@ class SetNewPasswordView(APIView):
 
 class UserProfileRetrieveUpdateView(generics.RetrieveAPIView):
     queryset = CustomUser.objects.all()
-    permission_classes = [permissions.IsAuthenticated]
 
     @extend_schema(
         summary="사용자 프로필 조회",
@@ -450,7 +449,6 @@ class UserProfileRetrieveUpdateView(generics.RetrieveAPIView):
 
 
 class UserDeleteView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
 
     @extend_schema(
         summary='user 계정 정보 삭제 요청',
