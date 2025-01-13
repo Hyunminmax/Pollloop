@@ -1,3 +1,4 @@
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django.core.mail import send_mail
@@ -10,10 +11,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny, IsAuthenticated
+
+from common.views import *
 from .models import CustomUser
 from .serializers import *
-from datetime import timedelta, datetime
-from zoneinfo import ZoneInfo
+from datetime import timedelta
+from django.utils import timezone
 import requests
 
 
@@ -170,6 +173,7 @@ class UserLoginView(APIView):
 
             # 리프레시 토큰 저장
             user.refresh_token = str(refresh)
+            user.last_login = timezone.now()
             user.save()
 
             return Response({
@@ -268,6 +272,7 @@ class KakaoCallbackView(APIView):
             # JWT 토큰 생성
             refresh = RefreshToken.for_user(user)
             user.refresh_token = str(refresh)
+            user.last_login = timezone.now()
             user.save()
 
             return Response({
@@ -397,10 +402,10 @@ class SetNewPasswordView(APIView):
 
 
 # user profile 관리 페이지
-
 class UserProfileRetrieveUpdateView(generics.RetrieveAPIView):
     queryset = CustomUser.objects.all()
     permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ['get', 'post']
 
     @extend_schema(
         summary="사용자 프로필 조회",
@@ -408,8 +413,8 @@ class UserProfileRetrieveUpdateView(generics.RetrieveAPIView):
         responses={200: UserProfileSerializer},
         tags=["프로필"]
     )
-    def get_object(self):
-        return self.request.user
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
 
     @extend_schema(
         summary="사용자 프로필 수정",
@@ -423,7 +428,8 @@ class UserProfileRetrieveUpdateView(generics.RetrieveAPIView):
             OpenApiExample(
                 "프로필 수정 예시",
                 value={
-                    "profile": "str"
+                    "email": "user@example.com",
+                    "profile": "프로필 이미지 URL"
                 },
                 request_only=True
             )
@@ -446,8 +452,10 @@ class UserProfileRetrieveUpdateView(generics.RetrieveAPIView):
         return UserProfileUpdateSerializer
 
     def perform_update(self, serializer):
+        if 'profile' in self.request.data:
+            profile_url = self.request.data['profile']
+            serializer.validated_data['profile'] = profile_url
         serializer.save()
-
 
 class UserDeleteView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -463,18 +471,13 @@ class UserDeleteView(APIView):
         serializer = UserDeleteRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        # 이메일과 비밀번호 확인
-        user = authenticate(email=serializer.validated_data['email'], password=serializer.validated_data['password'])
-        if user is None or user != request.user:
-            return Response({"error": "이메일 또는 비밀번호가 올바르지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
+        user = self.request.user
 
         if not serializer.validated_data['confirm']:
             return Response({"error": "계정 삭제를 확인하지 않았습니다."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 한국 시간대 설정
-        kst = ZoneInfo("Asia/Seoul")
-        user_withdraw_at = datetime.now(kst)
-        deletion_date = user_withdraw_at + timedelta(days=50)
+        user.withdraw_at = timezone.now()
+        deletion_date = user.withdraw_at + timedelta(days=50)
         user.is_active = False
         user.save()
 
