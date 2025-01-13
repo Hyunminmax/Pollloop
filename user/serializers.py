@@ -88,24 +88,17 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 class UserProfileUpdateSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=False)
-    profile = serializers.ImageField(required=False)
+    profile = serializers.CharField(required=False)
 
     class Meta:
         model = CustomUser
-        fields = ['id', 'email', 'profile', 'uuid']
+        fields = ['email', 'profile']
 
     def update(self, instance, validated_data):
-        # User 모델 데이터 추출
-        user_data = validated_data.pop('user', {})
-        user = instance.user
-
-        # User 모델 필드 업데이트
-        for data, value in user_data.items():
-            setattr(user, data, value)
-        user.save()
-
-        # UserProfile 모델 필드 업데이트
-        return super(UserProfileUpdateSerializer, self).update(instance, validated_data)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
 
 # 비밀번호 재설정
 CustomUser = get_user_model()

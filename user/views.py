@@ -402,10 +402,10 @@ class SetNewPasswordView(APIView):
 
 
 # user profile 관리 페이지
-
 class UserProfileRetrieveUpdateView(generics.RetrieveAPIView):
     queryset = CustomUser.objects.all()
     permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ['get', 'post']
 
     @extend_schema(
         summary="사용자 프로필 조회",
@@ -428,9 +428,8 @@ class UserProfileRetrieveUpdateView(generics.RetrieveAPIView):
             OpenApiExample(
                 "프로필 수정 예시",
                 value={
-                    "uuid": "user.uuid",
-                    "email": "user.email",
-                    "profile": "file"
+                    "email": "user@example.com",
+                    "profile": "프로필 이미지 URL"
                 },
                 request_only=True
             )
@@ -441,41 +440,6 @@ class UserProfileRetrieveUpdateView(generics.RetrieveAPIView):
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-
-        profile = request.FILES.get('profile')
-        if profile:
-            # InputFileSerializer를 사용하여 파일 업로드 처리
-            file_data = {
-                'input_source': 'profile',
-                'user': str(request.user.id),
-                'file': profile
-            }
-            file_serializer = InputFileSerializer(data=file_data)
-
-            if file_serializer.is_valid():
-                # S3 설정
-                region_name = settings.S3_REGION_NAME
-                bucket_name = settings.S3_STORAGE_BUCKET_NAME
-
-                # S3 클라이언트 초기화
-                s3_client = boto3.client(
-                    "s3",
-                    aws_access_key_id=settings.S3_ACCESS_KEY,
-                    aws_secret_access_key=settings.S3_SECRET_ACCESS_KEY,
-                    region_name=region_name,
-                )
-
-                # S3 키 생성
-                S3_key = f"profile/{str(request.user.id)}/{profile.name}"
-
-                # 파일 업로드 및 URL 받기
-                file_url = upload_file(s3_client, bucket_name, region_name, 'profile', S3_key, profile)
-
-                # 프로필 URL 업데이트
-                serializer.validated_data['profile'] = file_url
-            else:
-                return Response(file_serializer.errors, status=400)
-
         self.perform_update(serializer)
         return Response(serializer.data)
 
@@ -488,6 +452,9 @@ class UserProfileRetrieveUpdateView(generics.RetrieveAPIView):
         return UserProfileUpdateSerializer
 
     def perform_update(self, serializer):
+        if 'profile' in self.request.data:
+            profile_url = self.request.data['profile']
+            serializer.validated_data['profile'] = profile_url
         serializer.save()
 
 class UserDeleteView(APIView):
