@@ -52,12 +52,12 @@ class InputFile(APIView):
             description="""S3에 파일 저장 후 URL 반환 \n
 Multipart/form-data의 경우 예제 선택이 되지 않음. \n
 1. 사용자 프로필 수정\n
-    inputsorce: profile\n
+    input_sorce: profile\n
     file: file\n
 2. 폼에 파일 제출\n
     inputsorce: form_answer\n
-    form_uuid: 2bd64b2e1364441b9840020039906fe4\n
-    question_id: 10\n
+    form_title: 프론트엔드 6기 만족도 조사 15주차\n
+    question_order: 10\n
     option_number: 1\n
     file: file\n
 3. 폼 예제에 이미지 등록\n
@@ -103,16 +103,16 @@ Multipart/form-data의 경우 예제 선택이 되지 않음. \n
                 file_url = upload_file(s3_client, bucket_name, region_name, input_source, S3_key, file)
                 
             elif input_source == 'form_answer': # 폼 파일제출 저장
-                form = serializer.validated_data['form']
-                question = serializer.validated_data['question']
-                option = serializer.validated_data['option']
+                form = serializer.validated_data['form_title']
+                question = serializer.validated_data['question_order']
+                option = serializer.validated_data['option_number']
                 S3_key = input_source+'/'+str(form)+'/'+str(question)+'/'+str(option)+'/'+user+'/'+file.name
                 file_url = upload_file(s3_client, bucket_name, region_name, input_source, S3_key, file)
             
             elif input_source == 'form': # 폼 보기 저장
                 form = serializer.validated_data['form_title']
-                question = serializer.validated_data['question']
-                option = serializer.validated_data['option']
+                question = serializer.validated_data['question_order']
+                option = serializer.validated_data['option_number']
                 S3_key = input_source+'/'+str(form)+'/'+str(question)+'/'+str(option)+'/'+file.name
                 file_url = upload_file(s3_client, bucket_name, region_name, input_source, S3_key, file)
 
