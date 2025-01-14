@@ -275,12 +275,14 @@ CRONJOBS = [
     ('0 0 * * *', 'django.core.management.call_command', ['delete_withdrawn_users'])
 ]
 
-FRONTEND_URL = 'http://localhost:5173'
+FRONTEND_URL = 'https://pollloop.vercel.app/'
 
 # config/settings.py
 
 # 이메일 설정
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True

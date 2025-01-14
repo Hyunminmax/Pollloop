@@ -1,5 +1,5 @@
 import email
-from os import read
+from os import read, write
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
@@ -379,7 +379,5 @@ class FromRemoveSerializer(serializers.Serializer):
         return True
 
 
-
-###############명현###############
 class SendEmailSerializer(serializers.Serializer):
-    email = serializers.EmailField()
+    uuid = serializers.UUIDField(write_only=True)

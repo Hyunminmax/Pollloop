@@ -1,5 +1,6 @@
 import email
 from multiprocessing import context
+from re import A
 from django.shortcuts import get_object_or_404
 from drf_spectacular.types import OpenApiTypes
 
@@ -599,66 +600,57 @@ class FromRemoveView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             
 
-
-
-
-############명현############
-
 class FormSendEmailView(APIView):
     @extend_schema(
         summary="미응답자 이메일전송 for-007",
-        description="Form 미응답자에게 이메일 전송",
+        description="Form 미응답자들에게 이메일 전송",
         request=SendEmailSerializer,
-        responses={
-            200: OpenApiResponse(
-                response=OpenApiTypes.OBJECT,
-                description="미응답자에게 이메일 발송 성공",
-                examples=[
-                    OpenApiExample(
-                        "Success",
-                        value={
-                            "message": "미응답자에게 이메일발송을 완료하였습니다.",
-                        }
-                    )
-                ]
-            ),
-            404: OpenApiResponse(
-                response=OpenApiTypes.OBJECT,
-                description="사용자를 찾을 수 없음",
-                examples=[
-                    OpenApiExample(
-                        "User Not Found",
-                        value={"error": "해당 이메일로 등록된 사용자가 없습니다."}
-                    )
-                ]
+        examples=[
+            OpenApiExample(
+                name= 'Example Request 미응답자 이메일 발송',
+                value= {
+                    "uuid": "2bd64b2e1364441b9840020039906fe4"
+                },
+                description="폼 생성 데이터 user값은 토큰에서 추출"
             )
-        }
-    )
+        ],
+        responses={
+                201: "이메일이 성공적으로 발송됨",
+                400: "잘못된 요청",
+        },
+    )    
+
     def post(self, request):
         serializer = SendEmailSerializer(data=request.data)
         if serializer.is_valid():
-            email = serializer.validated_data['email']
-            try:
-                user = CustomUser.objects.get(email=email)
-                respondent = Respondent.objects.filter(user=user, is_complete=False).first()
-                if not respondent:
-                    return Response({'error': '미완료된 폼이 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+            uuid = serializer.validated_data['uuid']
+            form = get_object_or_404(Form, uuid=uuid)
 
-                form = respondent.form
-                reset_url = f"{settings.FRONTEND_URL}/forms/response/{form.uuid}/"
+            respondents = Respondent.objects.filter(form=form, is_complete=False)
+            form_url = f"{settings.FRONTEND_URL}/forms/response/{uuid}/"
+
+            if not respondents.exists():
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            else:
+                emails = []
+                for respondent in respondents:
+                    emails.append(respondent.user.email)
 
                 try:
                     send_mail(
                         '폼 참여',
-                        f'폼참여 하려면 다음 링크를 클릭하세요: {reset_url}',
+                        f'폼에 참여하려면 다음 링크를 클릭하세요: {form_url}',
                         settings.DEFAULT_FROM_EMAIL,
-                        [email],
+                        emails,
                         fail_silently=False,
                     )
                 except Exception as e:
-                    return Response({'error': '이메일 전송 중 오류가 발생했습니다.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                    return Response({"error":f"이메일 발송 실패:{str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR) 
+                return Response({"message":"발송성공", "emails":emails}, status=status.HTTP_200_OK)
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        
 
-                return Response({'message': '폼참여 링크를 이메일로 전송해드렸습니다.'}, status=status.HTTP_200_OK)
-            except CustomUser.DoesNotExist:
-                return Response({'error': '해당 이메일로 등록된 사용자가 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+                
