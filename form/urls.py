@@ -4,6 +4,7 @@ from .views import (
     FormInvitedView, FormSubmitView, FromRemoveView, FromSummaryView, 
     FromDataView, FormCompletedUserView, FormBookmarkView
 )
+from form import views
 
 urlpatterns = [
     path('uuid:<slug:uuid>/', FormView.as_view(), name='FormLoad'),
@@ -16,4 +17,5 @@ urlpatterns = [
     path('list/', FormListView.as_view(), name='FormList'),
     path('list/bookmark/', FormBookmarkView.as_view(), name='FormBookmark'),
     path('list/remove/', FromRemoveView.as_view(), name='FormRemove'),
+    path('send-mail/', views.FormSendEmailView.as_view(), name='SendEmail'),
 ]
