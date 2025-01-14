@@ -312,6 +312,7 @@ class RequestPasswordResetView(APIView):
         summary="비밀번호 재설정 요청",
         description="사용자 이메일로 비밀번호 재설정 링크를 발송합니다.",
         request=NewPasswordSerializer,
+        tags=["비밀번호 재설정"],
         responses={
             200: OpenApiResponse(
                 response=OpenApiTypes.OBJECT,
@@ -379,7 +380,8 @@ class SetNewPasswordView(APIView):
         summary="새 비밀번호 설정",
         description="비밀번호 재설정 링크를 통해 새 비밀번호를 설정합니다.",
         request=SetNewPasswordSerializer,
-        responses={200: OpenApiTypes.OBJECT, 400: OpenApiTypes.OBJECT}
+        responses={200: OpenApiTypes.OBJECT, 400: OpenApiTypes.OBJECT},
+        tags=["비밀번호 재설정"],
     )
     def post(self, request):
         serializer = SetNewPasswordSerializer(data=request.data)
@@ -399,6 +401,26 @@ class SetNewPasswordView(APIView):
                 user.save()
                 return Response({'message': '비밀번호가 성공적으로 재설정되었습니다.'}, status=status.HTTP_200_OK)
             return Response({'error': '유효하지 않은 토큰입니다.'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SetNewPassword2View(APIView):
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        summary="새 비밀번호 설정",
+        description="프로필 수정에서의 비밀번호 재설정",
+        request=SetNewPassword2Serializer,
+        responses={200: OpenApiTypes.OBJECT, 400: OpenApiTypes.OBJECT},
+        tags=["프로필"],
+    )
+    def post(self, request):
+        serializer = SetNewPassword2Serializer(data=request.data)
+        if serializer.is_valid():
+            user = CustomUser.objects.get(refresh_token=serializer.validated_data['refresh_token'])
+            user.set_password(serializer.validated_data['new_password'])
+            user.save()
+            return Response({'message': '비밀번호가 성공적으로 재설정되었습니다.'}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

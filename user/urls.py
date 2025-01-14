@@ -19,4 +19,6 @@ urlpatterns = [
     # Profile
     path('profile/', views.UserProfileRetrieveUpdateView.as_view(), name='user-profile'),
     path('profile/delete/', views.UserDeleteView.as_view(), name='user-delete'),
+    path('profile/password-reset/', views.SetNewPassword2View.as_view(), name='porfile-password-reset'),
+
 ]

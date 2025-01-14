@@ -155,6 +155,35 @@ class SetNewPasswordSerializer(serializers.Serializer):
     4. 사용자 링크 클릭시 프론트에서 uid, token 추출
     5. 사용자 새 비번 입력시 프론트에서 uid, tokem, 새비번 백엔드로
     """
+class SetNewPassword2Serializer(serializers.Serializer):
+    refresh_token = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True)
+    new_password2 = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        try:
+            user = CustomUser.objects.get(refresh_token=data['refresh_token'])
+        except CustomUser.DoesNotExist:
+            raise serializers.ValidationError({"refresh_token": "유효하지 않은 토큰입니다."})
+
+        if not user.check_password(data["password"]):
+            raise serializers.ValidationError({"password": "입력하신 기존 비밀번호가 틀립니다. 다시 확인해주세요"})
+
+        if data["new_password"] != data["new_password2"]:
+            raise serializers.ValidationError({"new_password2": "새 비밀번호가 서로 일치하지 않습니다."})
+
+        if user.check_password(data["new_password"]):
+            raise serializers.ValidationError({"new_password": "새로운 비밀번호는 이전 비밀번호와 달라야 합니다."})
+
+        try:
+            validate_password(data["new_password"], user=user)
+        except ValidationError as e:
+            raise serializers.ValidationError({"new_password": list(e.messages)})
+
+        return data
+
+
 
 class UserDeleteResponseSerializer(serializers.Serializer):
     message = serializers.CharField()
