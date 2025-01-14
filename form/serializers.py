@@ -327,6 +327,8 @@ class FormSubmitSerializer(serializers.Serializer):
         
 # 폼 리스트 시리얼라이저
 class FormListSerializer(UUIDHypenRemoveMixin, serializers.ModelSerializer):
+    completed_count = serializers.SerializerMethodField()
+
     class Meta:
         model = Form
         fields =[
@@ -337,10 +339,15 @@ class FormListSerializer(UUIDHypenRemoveMixin, serializers.ModelSerializer):
             'is_closed',
             'access_code',
             'uuid',
+            'completed_count',
             'target_count',
             'is_private',
             'is_bookmark'
         ]
+
+    def get_completed_count(self, form):
+        return Respondent.objects.filter(form=form, is_complete=True).count()    
+
 
 # 폼 요약 데이터(참여자 목록 탭) 시리얼라이저
 class FormCompletedUserSerializer(UUIDHypenRemoveMixin, serializers.ModelSerializer):
