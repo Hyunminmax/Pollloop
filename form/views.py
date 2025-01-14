@@ -1,3 +1,5 @@
+import email
+from multiprocessing import context
 from django.shortcuts import get_object_or_404
 from drf_spectacular.types import OpenApiTypes
 
@@ -9,7 +11,7 @@ from rest_framework import status
 from .serializers import (
     FormBookmarkSerializer, FormListSerializer, FormSerializer, FormInvitedSerializer,
     FormSubmitSerializer, FormSummarySerializer, FromDataSerializer,
-    FormCompletedUserSerializer, FromRemoveSerializer, SendEmailSerializer
+    FormCompletedUserSerializer, FromRemoveSerializer, FormReadSerializer, SendEmailSerializer
 )
 from uuid import UUID
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample, OpenApiResponse
@@ -28,7 +30,6 @@ class FormCreateView(APIView):
                 OpenApiExample(
                     name= 'Example Request',
                     value= {
-                        "user": 1,  
                         "title": "설문조사 생성 테스트1",
                         "tag": "설문조사생성1 태그",
                         "end_at": "2025-01-31",  
@@ -167,7 +168,7 @@ class FormCreateView(APIView):
                             },
                         ]
                     },
-                    description="폼 생성 데이터 user값은 토큰에서 추출하는 것으로 변경 예정"
+                    description="폼 생성 데이터 user값은 토큰에서 추출"
                 ),
             ],
             responses={
@@ -176,9 +177,9 @@ class FormCreateView(APIView):
             },
     )
     def post(self, request, *args, **kwargs):
-        serializer = FormSerializer(data=request.data)
+        serializer = FormSerializer(data=request.data, context={'request':request})
         if serializer.is_valid():
-#serializer의 create 실행
+            #serializer의 create 실행
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -218,7 +219,7 @@ class FormView(APIView):
         except Form.DoesNotExist:
             return Response({'error': 'Form not found'}, status=status.HTTP_404_NOT_FOUND)
         
-        serializer = FormSerializer(form)
+        serializer = FormReadSerializer(form)
         
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -231,8 +232,7 @@ class FormInvitedView(APIView):
                 OpenApiExample(
                     name= 'Example Request',
                     value= {
-                        'uuid': '2bd64b2e1364441b9840020039906fe4',
-                        'user': 1
+                        'uuid': '2bd64b2e1364441b9840020039906fe4'
                     },
                     description="폼 참여 데이터 user값은 추후에 토큰에서 추출하는 것으로 변경 예정"
                 ),
@@ -245,7 +245,7 @@ class FormInvitedView(APIView):
     )
             
     def post(self, request):
-        serializer = FormInvitedSerializer(data=request.data)
+        serializer = FormInvitedSerializer(data=request.data, context={'request':request})
         if serializer.is_valid():
             respondent, created = serializer.save()
             if created:
@@ -270,7 +270,7 @@ class FromSummaryView(APIView):
                     OpenApiExample(
                         name='uuid예시',
                         value='2bd64b2e1364441b9840020039906fe4',
-                        description='예시로 제공된 uuid, 사용자 정보는 token으로 처리'
+                        description='예시로 제공된 uuid'
                     ),
                 ],
             ),
@@ -307,7 +307,6 @@ class FormSubmitView(APIView):
                 OpenApiExample(
                     name= 'Example Request',
                     value= {
-                        "user": 1,  # 추후 엑세스토큰으로 사용자 구분가능 
                         "uuid": "2bd64b2e1364441b9840020039906fe4",
                         "questions": [
                             {
@@ -415,7 +414,7 @@ class FormSubmitView(APIView):
                             },
                         ]
                     },
-                    description="폼 제출 데이터 user값은 토큰에서 추출하는 것으로 변경 예정"
+                    description="폼 제출 데이터 user값은 토큰에서 추출"
                 ),
             ],
             responses={
@@ -424,7 +423,7 @@ class FormSubmitView(APIView):
             },
     )
     def post(self, request):
-        serializer = FormSubmitSerializer(data=request.data)
+        serializer = FormSubmitSerializer(data=request.data, context={'request':request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(status=status.HTTP_201_CREATED)
@@ -432,18 +431,16 @@ class FormSubmitView(APIView):
 class FormListView(APIView):
     @extend_schema(
         summary="나의 폼 리스트 로드 For008",
-        description="나의 폼에서 사용, user_id는 추후 토큰으로 변경 예정",
+        description="나의 폼에서 사용, user는 토큰에서 추출",
         responses={
                 200: "폼 정보가 성공적으로 반환됨",
                 400: "잘못된 요청 (UUID 누락)",
                 404: "폼을 찾을 수 없음",
         }
     )
-    def get(self, request, user_id):
-        if not user_id: # 토큰으로 변경시 삭제 예정
-            return Response({"error": "user_id is required."}, status=status.HTTP_400_BAD_REQUEST)
+    def get(self, request):
         try:
-            user = CustomUser.objects.get(id=user_id)
+            user = CustomUser.objects.get(email=request.user)
         except CustomUser.DoesNotExist:
             return Response({"error": "User does not exist."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -468,7 +465,7 @@ class FromDataView(APIView):
                     OpenApiExample(
                         name='uuid예시',
                         value='2bd64b2e1364441b9840020039906fe4',
-                        description='예시로 제공된 uuid, 사용자 정보는 token으로 처리'
+                        description='예시로 제공된 uuid'
                     ),
                 ],
             ),
@@ -507,7 +504,7 @@ class FormCompletedUserView(APIView):
                     OpenApiExample(
                         name='uuid예시',
                         value='2bd64b2e1364441b9840020039906fe4',
-                        description='예시로 제공된 uuid, 사용자 정보는 token으로 처리'
+                        description='예시로 제공된 uuid'
                     ),
                 ],
             ),
@@ -544,19 +541,17 @@ class FormBookmarkView(APIView):
                     name= 'Example Request 즐겨찾기 설정',
                     value= {
                         'uuid': '2bd64b2e1364441b9840020039906fe4',
-                        "is_bookmark": True, 
-                        "user": 1,  
+                        'is_bookmark': True
                     },
-                    description="폼 생성 데이터 user값은 토큰에서 추출하는 것으로 변경 예정"
+                    description="폼 생성 데이터 user값은 토큰에서 추출"
                 ),
                 OpenApiExample(
                     name= 'Example Request 즐겨찾기 해제',
                     value= {
                         'uuid': '2bd64b2e1364441b9840020039906fe4',
-                        "is_bookmark": False, 
-                        "user": 1,  
+                        'is_bookmark': False  
                     },
-                    description="설정, 해제 총 두 가지 예제가 있습니다. / 폼 생성 데이터 user값은 토큰에서 추출하는 것으로 변경 예정"
+                    description="설정, 해제 총 두 가지 예제가 있습니다. / 폼 생성 데이터 user값은 토큰에서 추출"
                 ),
             ],
             responses={
@@ -568,7 +563,7 @@ class FormBookmarkView(APIView):
         serializer = FormBookmarkSerializer(data=request.data)
         if serializer.is_valid():
             # 인증 적용후 사용자 정보 확인 부분 삭제 예정
-            form = get_object_or_404(Form, uuid=serializer.validated_data['uuid'], user=serializer.validated_data['user'])
+            form = get_object_or_404(Form, uuid=serializer.validated_data['uuid'], user=request.user)
 
             form.is_bookmark = serializer.validated_data['is_bookmark']
             form.save()
@@ -586,10 +581,9 @@ class FromRemoveView(APIView):
                 OpenApiExample(
                     name= 'Example Request 즐겨찾기 설정',
                     value= {
-                        'uuid': '안전상의 이유로 예시uuid를 제공하지 않습니다.   꼭 삭제 테스트용 폼 생성하고 테스트하세요.',
-                        "user": 1,  
+                        'uuid': '안전상의 이유로 예시uuid를 제공하지 않습니다.   꼭 삭제 테스트용 폼 생성하고 테스트하세요.'
                     },
-                    description="폼 생성 데이터 user값은 토큰에서 추출하는 것으로 변경 예정"
+                    description="폼 생성 데이터 user값은 토큰에서 추출"
                 ),
             ],
             responses={
@@ -598,7 +592,7 @@ class FromRemoveView(APIView):
             },
     )
     def post(self, request):
-        serializer = FromRemoveSerializer(data=request.data)
+        serializer = FromRemoveSerializer(data=request.data, context={'request':request})
         if serializer.is_valid():
             result = serializer.delete()
             return Response(result, status=status.HTTP_200_OK)

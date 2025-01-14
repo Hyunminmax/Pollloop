@@ -1,3 +1,5 @@
+import email
+from os import read
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
@@ -17,7 +19,7 @@ class UUIDHypenRemoveMixin:
 # 폼 참여인원 시리얼라이저
 class FormInvitedSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(write_only=True)
-    user = serializers.IntegerField(write_only=True)
+    user = serializers.IntegerField(read_only=True)
     
     class Meta:
         model = Respondent
@@ -28,12 +30,13 @@ class FormInvitedSerializer(serializers.ModelSerializer):
         return form
     
     def validate_user(self, value):
-        user = get_object_or_404(CustomUser, id=value)
+        user = get_object_or_404(CustomUser, email=value)
         return user
     
     def create(self, validated_data):
+        
         form = validated_data['uuid']
-        user = validated_data['user']
+        user = self.context['request'].user
         # form, user 정보로 기존 참여자가 있는지 조회
         existing_respondent = Respondent.objects.filter(user=user, form=form).first()
         # 기존 참여자면 참여자 정보 반환
@@ -46,6 +49,15 @@ class FormInvitedSerializer(serializers.ModelSerializer):
 #폼 시리얼라이저가 질문과 질문의 보기를 포함해야 하기 때문에 질문의 보기부터 질문, 폼 순서로 작성
 # 객관식 질문의 보기 시리얼라이저 클래스
 class OptionsOfQuestionsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OptionsOfQuestions
+        fields = [
+            'option_number', 
+            'option_context'
+            ]
+
+# 객관식 질문의 보기 시리얼라이저 클래스 조회용!
+class OptionsOfQuestionsReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = OptionsOfQuestions
         fields = [
@@ -68,8 +80,24 @@ class QuestionsSerializer(serializers.ModelSerializer):
             'is_required', 
             'options_of_questions'
             ]
+        
+# 질문 시리얼라이저 조회용!
+class QuestionsReadSerializer(serializers.ModelSerializer):
+    # OptionsOfQuestions와 관계 설정 Question은 여러개의 Options를 가질수 있지만 필수는 아니다.
+    options_of_questions = OptionsOfQuestionsSerializer(many=True, source='optionsofquestions_set', required=False)
+
+    class Meta:
+        model = Questions
+        fields = [
+            'layout_type', 
+            'question', 
+            'question_order',
+            'is_required', 
+            'options_of_questions'
+            ]
 # 폼 시리얼라이저
 class FormSerializer(UUIDHypenRemoveMixin, serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
     # Form의 관계 설정 Form은 Questions를 가질수 있지만 필수는 아니다. 생성 후 바로 임시저장의 경우 질문 없음.
     questions = QuestionsSerializer(many=True, required=False)
     
@@ -95,6 +123,7 @@ class FormSerializer(UUIDHypenRemoveMixin, serializers.ModelSerializer):
     def create(self, validated_data):
         # questions 만들기 위해 questions을 분리한다. 없다면 빈 리스트반환
         questions_data = validated_data.pop('questions', [])
+        validated_data['user'] = self.context['request'].user
         form = Form.objects.create(**validated_data)
         # 질문 생성
         for question_data in questions_data:
@@ -105,30 +134,30 @@ class FormSerializer(UUIDHypenRemoveMixin, serializers.ModelSerializer):
                 OptionsOfQuestions.objects.create(question=question, **option_data)
             
         return form
-        
-    # def update(self, instance, validated_data):
-    #     # 질문 갱신을 위해 질문내용을 새로 받는다.
-    #     questions_data = validated_data.pop('questions', [])
-        
-    #     # 폼의 모든 정보를 새로 갱신한다.
-    #     instance.title = validated_data.pop('title', instance.title)
-    #     instance.tag = validated_data.pop('tag', instance.tag)
-    #     instance.end_at = validated_data.pop('end_at', instance.end_at)
-    #     instance.is_closed = validated_data.pop('is_closed', instance.is_closed)
-    #     instance.access_code = validated_data.pop('access_code', instance.access_code)
-    #     instance.subtitle = validated_data.pop('subtitle', instance.subtitle)
-    #     instance.form_description = validated_data.pop('form_description', instance.form_description)
-    #     instance.save()
+    
+class FormReadSerializer(UUIDHypenRemoveMixin, serializers.ModelSerializer):
+    # Form의 관계 설정 Form은 Questions를 가질수 있지만 필수는 아니다. 생성 후 바로 임시저장의 경우 질문 없음.
+    questions = QuestionsReadSerializer(many=True, source='questions_set', required=False)
+    
+    class Meta:
+        model = Form
+        fields = [
+            'user', #커스텀유저와 관계설정용
+            'title', # 폼의 제목
+            'tag', # 폼의 테그
+            'create_at', #폼의 생성시간
+            'end_at', # 폼의 작성 제한 시간
+            'is_closed', # 폼 종료여부
+            'target_count', # 목표인원
+            'is_bookmark', # 즐겨찾기 여부
+            'is_private', # 비공개 여부 
+            'access_code', # 폼 접근 코드
+            'subtitle', # 폼의 소제목
+            'form_description', # 폼의 설명
+            'uuid', # 링크에 사용할 uuid
+            'questions' # 폼이 포함하고 있는 질문과 관계설정용
+        ]
 
-    #     # 기존 질문을 삭제하고 새로 받은 질문내용으로 갱신한다.
-    #     # questions_set 장고에서 form과 연결된 questions를 관리하기 위해 생성한 set.
-    #     instance.questions_set.all().delete()
-    #     for question_data in questions_data:
-    #         options_data = question_data.pop('options_of_questions',[])
-    #         question = Questions.objects.create(form=instance, **question_data)
-    #         for option_data in options_data:
-    #             OptionsOfQuestions.objects.create(question=question, **option_data)
-    #     return instance
 
 # 폼 요약 기본정보 시리얼라이저
 class FormSummarySerializer(UUIDHypenRemoveMixin, serializers.ModelSerializer):
@@ -226,14 +255,14 @@ class FromDataSerializer(UUIDHypenRemoveMixin, serializers.ModelSerializer):
 
 # 폼 제출 시리얼라이저
 class FormSubmitSerializer(serializers.Serializer):
-    user = serializers.IntegerField(write_only=True)
+    user = serializers.IntegerField(read_only=True)
     uuid = serializers.UUIDField(write_only=True)
     questions = serializers.ListField(child=serializers.DictField(), write_only=True)
 
     def validate(self, data):
         # 폼, 사용자 확인
         form = get_object_or_404(Form, uuid=data['uuid'])
-        user = get_object_or_404(CustomUser, id=data['user'])
+        user = self.context['request'].user
         data['form']=form
         data['user']=user
         return data
@@ -242,10 +271,13 @@ class FormSubmitSerializer(serializers.Serializer):
         form = validated_data['form']
         user = validated_data['user']
         # 제출자 등록 호출 FormInvitedSerializer 이용
-        form_invited_serializer = FormInvitedSerializer(data={
-            'uuid' : form.uuid,
-            'user' : user.id
-        })
+        form_invited_serializer = FormInvitedSerializer(
+            data={
+                'uuid' : form.uuid,
+                'user' : user.email
+            },
+            context=self.context
+        )
         form_invited_serializer.is_valid(raise_exception=True)
         respondent, created = form_invited_serializer.create(form_invited_serializer.validated_data)
 
@@ -325,18 +357,16 @@ class FormCompletedUserSerializer(UUIDHypenRemoveMixin, serializers.ModelSeriali
 class FormBookmarkSerializer(serializers.Serializer):
     uuid = serializers.UUIDField()
     is_bookmark = serializers.BooleanField()
-    # 인증 적용후 삭제 예정
-    user = serializers.IntegerField()
+    
 
 # 폼 삭제
 class FromRemoveSerializer(serializers.Serializer):
     # 첫 시도는 ModelSerializer를 상속받아 시도했지만 기존데이터와 충돌?이 발생하며 삭제하지 못한다. 
     uuid = serializers.UUIDField()
-    user = serializers.IntegerField()
-    
+        
     def delete(self):
         uuid = self.validated_data['uuid']
-        user = self.validated_data['user']
+        user = self.context['request'].user
         form = get_object_or_404(Form, uuid=uuid, user=user)
         form.delete()
         return True

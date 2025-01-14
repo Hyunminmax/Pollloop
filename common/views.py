@@ -1,3 +1,4 @@
+from multiprocessing import context
 import boto3
 from django.conf import settings
 from rest_framework.response import Response
@@ -51,46 +52,34 @@ class InputFile(APIView):
             description="""S3에 파일 저장 후 URL 반환 \n
 Multipart/form-data의 경우 예제 선택이 되지 않음. \n
 1. 사용자 프로필 수정\n
-    inputsorce: profile\n
-    user_uuid: feb3e9a66abf4fcfa5a841eed8bca466\n
+    input_sorce: profile\n
     file: file\n
 2. 폼에 파일 제출\n
     inputsorce: form_answer\n
-    form_uuid: 2bd64b2e1364441b9840020039906fe4\n
-    question_id: 10\n
+    form_title: 프론트엔드 6기 만족도 조사 15주차\n
+    question_order: 10\n
     option_number: 1\n
-    user_uuid: feb3e9a66abf4fcfa5a841eed8bca466\n
     file: file\n
 3. 폼 예제에 이미지 등록\n
     inputsorce: form\n
-    form_uuid: 2bd64b2e1364441b9840020039906fe4\n
+    form_title: 프론트엔드 6기 만족도 조사 15주차\n
     question_order: 9\n
     option_number: 1\n
     file: file\n
     """,
             request={
                 "multipart/form-data": InputFileSerializer,  # Content-Type 명시
-            },
-            responses={
-                200: OpenApiResponse(
-                    response={
-                        "uuid": "2bd64b2e1364441b9840020039906fe4",
-                        "user": 1,
-                    },
-                    description="S3 URL이 성공적으로 반환된 경우",
-                ),
-                400: "잘못된 요청 데이터",
-                404: "폼을 찾을 수 없음",
-            },
+            }
     )
 
     def post(self, request):
-        serializer = InputFileSerializer(data=request.data)
+        serializer = InputFileSerializer(data=request.data, context={'request':request})
 
         if serializer.is_valid():
             # 필수 입력값
             input_source = serializer.validated_data['input_source']
             file = serializer.validated_data['file']
+            user = str(request.user.uuid)
             # 조건부 입력값
             # user = serializer.validated_data['user']
             # form = serializer.validated_data['form']
@@ -110,22 +99,20 @@ Multipart/form-data의 경우 예제 선택이 되지 않음. \n
             )
 
             if input_source == 'profile': # 프로필 저장
-                user = serializer.validated_data['user']
-                S3_key = input_source+'/'+str(user)+'/'+file.name
+                S3_key = input_source+'/'+user+'/'+file.name
                 file_url = upload_file(s3_client, bucket_name, region_name, input_source, S3_key, file)
                 
             elif input_source == 'form_answer': # 폼 파일제출 저장
-                form = serializer.validated_data['form']
-                question = serializer.validated_data['question']
-                option = serializer.validated_data['option']
-                user = serializer.validated_data['user']
-                S3_key = input_source+'/'+str(form)+'/'+str(question)+'/'+str(option)+'/'+str(user)+'/'+file.name
+                form = serializer.validated_data['form_title']
+                question = serializer.validated_data['question_order']
+                option = serializer.validated_data['option_number']
+                S3_key = input_source+'/'+str(form)+'/'+str(question)+'/'+str(option)+'/'+user+'/'+file.name
                 file_url = upload_file(s3_client, bucket_name, region_name, input_source, S3_key, file)
             
             elif input_source == 'form': # 폼 보기 저장
-                form = serializer.validated_data['form']
-                question = serializer.validated_data['question']
-                option = serializer.validated_data['option']
+                form = serializer.validated_data['form_title']
+                question = serializer.validated_data['question_order']
+                option = serializer.validated_data['option_number']
                 S3_key = input_source+'/'+str(form)+'/'+str(question)+'/'+str(option)+'/'+file.name
                 file_url = upload_file(s3_client, bucket_name, region_name, input_source, S3_key, file)
 

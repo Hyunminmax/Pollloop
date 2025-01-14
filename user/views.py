@@ -427,7 +427,6 @@ class SetNewPassword2View(APIView):
 # user profile 관리 페이지
 class UserProfileRetrieveUpdateView(generics.RetrieveAPIView):
     queryset = CustomUser.objects.all()
-    permission_classes = [permissions.IsAuthenticated]
     http_method_names = ['get', 'post']
 
     @extend_schema(
@@ -481,7 +480,6 @@ class UserProfileRetrieveUpdateView(generics.RetrieveAPIView):
         serializer.save()
 
 class UserDeleteView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
 
     @extend_schema(
         summary='user 계정 정보 삭제 요청',
