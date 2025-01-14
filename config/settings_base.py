@@ -275,7 +275,7 @@ CRONJOBS = [
     ('0 0 * * *', 'django.core.management.call_command', ['delete_withdrawn_users'])
 ]
 
-FRONTEND_URL = 'https://pollloop.vercel.app/'
+FRONTEND_URL = 'https://pollloop.vercel.app'
 
 # config/settings.py
 
