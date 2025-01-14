@@ -5,6 +5,7 @@ class InputFileSerializer(serializers.Serializer):
     input_source = serializers.CharField(write_only=True)
     user = serializers.UUIDField(read_only=True, required=False)
     form = serializers.UUIDField(write_only=True, required=False)
+    form_title = serializers.CharField(write_only=True, required=False)
     question = serializers.IntegerField(write_only=True, required=False)
     option = serializers.IntegerField(write_only=True, required=False)
     file = serializers.FileField(write_only=True)
