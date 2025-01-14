@@ -182,6 +182,7 @@ class UserLoginView(APIView):
                 "email": user.email,
                 "refresh": str(refresh),
                 "access": str(refresh.access_token),
+                "profile": user.profile,
             }, status=status.HTTP_200_OK)
 
         return Response({
