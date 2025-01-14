@@ -1,17 +1,22 @@
 from django.shortcuts import get_object_or_404
+from drf_spectacular.types import OpenApiTypes
+
 from .models import Form, Respondent
 from user.models import CustomUser
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import (
-    FormBookmarkSerializer, FormListSerializer, FormSerializer, FormInvitedSerializer, 
+    FormBookmarkSerializer, FormListSerializer, FormSerializer, FormInvitedSerializer,
     FormSubmitSerializer, FormSummarySerializer, FromDataSerializer,
-    FormCompletedUserSerializer, FromRemoveSerializer
+    FormCompletedUserSerializer, FromRemoveSerializer, SendEmailSerializer
 )
 from uuid import UUID
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample, OpenApiResponse
 
+from django.core.mail import send_mail
+from django.conf import settings
+import token
 
 ############현민############
 class FormCreateView(APIView):
@@ -604,3 +609,62 @@ class FromRemoveView(APIView):
 
 
 ############명현############
+
+class FormSendEmailView(APIView):
+    @extend_schema(
+        summary="미응답자 이메일전송 for-007",
+        description="Form 미응답자에게 이메일 전송",
+        request=SendEmailSerializer,
+        responses={
+            200: OpenApiResponse(
+                response=OpenApiTypes.OBJECT,
+                description="미응답자에게 이메일 발송 성공",
+                examples=[
+                    OpenApiExample(
+                        "Success",
+                        value={
+                            "message": "미응답자에게 이메일발송을 완료하였습니다.",
+                        }
+                    )
+                ]
+            ),
+            404: OpenApiResponse(
+                response=OpenApiTypes.OBJECT,
+                description="사용자를 찾을 수 없음",
+                examples=[
+                    OpenApiExample(
+                        "User Not Found",
+                        value={"error": "해당 이메일로 등록된 사용자가 없습니다."}
+                    )
+                ]
+            )
+        }
+    )
+    def post(self, request):
+        serializer = SendEmailSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            try:
+                user = CustomUser.objects.get(email=email)
+                respondent = Respondent.objects.filter(user=user, is_complete=False).first()
+                if not respondent:
+                    return Response({'error': '미완료된 폼이 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+
+                form = respondent.form
+                reset_url = f"{settings.FRONTEND_URL}/forms/response/{form.uuid}/"
+
+                try:
+                    send_mail(
+                        '폼 참여',
+                        f'폼참여 하려면 다음 링크를 클릭하세요: {reset_url}',
+                        settings.DEFAULT_FROM_EMAIL,
+                        [email],
+                        fail_silently=False,
+                    )
+                except Exception as e:
+                    return Response({'error': '이메일 전송 중 오류가 발생했습니다.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+                return Response({'message': '폼참여 링크를 이메일로 전송해드렸습니다.'}, status=status.HTTP_200_OK)
+            except CustomUser.DoesNotExist:
+                return Response({'error': '해당 이메일로 등록된 사용자가 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

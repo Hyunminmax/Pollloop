@@ -1,5 +1,7 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
+
+import user
 from .models import *
 from user.models import CustomUser
 
@@ -341,4 +343,6 @@ class FromRemoveSerializer(serializers.Serializer):
 
 
 
-###############명현############### 
+###############명현###############
+class SendEmailSerializer(serializers.Serializer):
+    email = serializers.EmailField()
