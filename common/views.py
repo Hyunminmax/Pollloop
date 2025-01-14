@@ -62,7 +62,7 @@ Multipart/form-data의 경우 예제 선택이 되지 않음. \n
     file: file\n
 3. 폼 예제에 이미지 등록\n
     inputsorce: form\n
-    form_uuid: 2bd64b2e1364441b9840020039906fe4\n
+    form_title: 프론트엔드 6기 만족도 조사 15주차\n
     question_order: 9\n
     option_number: 1\n
     file: file\n
@@ -110,7 +110,7 @@ Multipart/form-data의 경우 예제 선택이 되지 않음. \n
                 file_url = upload_file(s3_client, bucket_name, region_name, input_source, S3_key, file)
             
             elif input_source == 'form': # 폼 보기 저장
-                form = serializer.validated_data['form']
+                form = serializer.validated_data['form_title']
                 question = serializer.validated_data['question']
                 option = serializer.validated_data['option']
                 S3_key = input_source+'/'+str(form)+'/'+str(question)+'/'+str(option)+'/'+file.name
