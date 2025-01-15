@@ -136,10 +136,8 @@ class UserRegistrationView(generics.CreateAPIView):
                 "access": str(refresh.access_token),
             }, status=status.HTTP_201_CREATED)
         # 유효성 검사 실패 시 에러 반환
-        return Response({
-            "message": "회원가입에 실패하셨습니다.",
-            "errors": serializer.errors
-        }, status=status.HTTP_400_BAD_REQUEST)
+        print("aaa")
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # 사용자 로그인을 처리하는 뷰
