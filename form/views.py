@@ -24,8 +24,8 @@ import token
 ############현민############
 class FormCreateView(APIView):
     @extend_schema(
-            summary="폼 생성 For002-1",
-            description="사용자가 폼을 생성하는 경우",
+            summary="폼 생성 or 수정 For002-3",
+            description="사용자가 폼을 생성하거나 수정 경우, Examples 눌러서 수정 예시도 확인하세요.",
             request=FormSerializer,
             examples=[
                 OpenApiExample(
@@ -171,6 +171,43 @@ class FormCreateView(APIView):
                     },
                     description="폼 생성 데이터 user값은 토큰에서 추출"
                 ),
+                OpenApiExample(
+                    name= 'Example Update Request',
+                    value= {
+                        "uuid" : "폼 생성으로 만들어졌던 폼 UUID",
+                        "title": "설문조사 생성 테스트1",
+                        "tag": "설문조사생성1 태그",
+                        "end_at": "2025-01-31",  
+                        "is_closed": 'TEMP',  
+                        "target_count": 30,
+                        "is_bookmark": False, 
+                        "is_private": True, 
+                        "access_code": "12345",  
+                        "subtitle": "이렇게 표지~ ",
+                        "form_description": "여기에 상세 설명 ",
+                        "questions": [
+                            {
+                                "layout_type": "SHORT_TYPE",
+                                "question": "이름을 입력해 주세요. ",
+                                "question_order": 1,
+                                "is_required": True,
+                                "options_of_questions": [
+                                    {"option_number": 1, "option_context": ""},
+                                ]
+                            },
+                            {
+                                "layout_type": "SHORT_TYPE",
+                                "question": "소속 트랙을 선택해주세요.",
+                                "question_order": 2,
+                                "is_required": True,
+                                "options_of_questions": [
+                                    {"option_number": 1, "option_context": ""},
+                                ]
+                            }
+                        ]
+                    },
+                    description="폼 생성 데이터 user값은 토큰에서 추출"
+                ),
             ],
             responses={
                     201: "폼 정보가 성공적으로 제출됨",
@@ -178,12 +215,22 @@ class FormCreateView(APIView):
             },
     )
     def post(self, request, *args, **kwargs):
-        serializer = FormSerializer(data=request.data, context={'request':request})
-        if serializer.is_valid():
-            #serializer의 create 실행
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        uuid = request.data.get('uuid')
+        if not uuid:
+            serializer = FormSerializer(data=request.data, context={'request':request})
+            if serializer.is_valid():
+                #serializer의 create 실행
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            form = get_object_or_404(Form, uuid=uuid)
+            serializer = FormSerializer(form, data=request.data, context={'request':request})
+            if serializer.is_valid():
+                #serializer의 update 실행
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class FormView(APIView):
     @extend_schema(
