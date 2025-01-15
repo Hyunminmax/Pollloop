@@ -1,5 +1,6 @@
 import email
 from os import read, write
+from typing import Required
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
@@ -100,10 +101,12 @@ class FormSerializer(UUIDHypenRemoveMixin, serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(read_only=True)
     # Form의 관계 설정 Form은 Questions를 가질수 있지만 필수는 아니다. 생성 후 바로 임시저장의 경우 질문 없음.
     questions = QuestionsSerializer(many=True, required=False)
+    uuid = serializers.UUIDField(required=False)
     
     class Meta:
         model = Form
         fields = [
+            'uuid', #폼 수정시 필요
             'user', #커스텀유저와 관계설정용
             'title', # 폼의 제목
             'tag', # 폼의 테그
@@ -125,6 +128,30 @@ class FormSerializer(UUIDHypenRemoveMixin, serializers.ModelSerializer):
         questions_data = validated_data.pop('questions', [])
         validated_data['user'] = self.context['request'].user
         form = Form.objects.create(**validated_data)
+        
+        # 질문 생성 호출
+        self._create_or_update(form, questions_data)
+        
+        return form
+    
+    def update(self, instance, validated_data):
+        questions_data = validated_data.pop('questions', [])
+
+        # 폼 기본정보 업데이트
+        for key, value in validated_data.items():
+            setattr(instance, key, value)
+        instance.save()
+
+        # 기존 질문 삭제
+        Questions.objects.filter(form=instance).delete()
+        
+        # 수정된 질문 생성 호출
+        self._create_or_update(instance, questions_data)
+        
+        return instance
+
+    # 질문 생성
+    def _create_or_update(self, form, questions_data):
         # 질문 생성
         for question_data in questions_data:
             options_data = question_data.pop('options_of_questions', [])
@@ -133,7 +160,6 @@ class FormSerializer(UUIDHypenRemoveMixin, serializers.ModelSerializer):
             for option_data in options_data:
                 OptionsOfQuestions.objects.create(question=question, **option_data)
             
-        return form
     
 class FormReadSerializer(UUIDHypenRemoveMixin, serializers.ModelSerializer):
     # Form의 관계 설정 Form은 Questions를 가질수 있지만 필수는 아니다. 생성 후 바로 임시저장의 경우 질문 없음.
