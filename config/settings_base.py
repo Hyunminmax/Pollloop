@@ -177,6 +177,11 @@ S3_REGION_NAME = ENV.get('S3_REGION_NAME')
 STATIC_URL = f'https://{ENV.get('S3_STORAGE_BUCKET_NAME')}.s3.amazonaws.com/static/'
 MEDIA_URL = f'https://{ENV.get('S3_STORAGE_BUCKET_NAME')}.s3.amazonaws.com/media/'
 
+# 파일관련 용량
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024  # 5MB
+
+
 # STORAGES 작성
 STORAGES = {
     "default": {
