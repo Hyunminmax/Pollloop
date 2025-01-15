@@ -16,9 +16,9 @@ PASSWORD_TOO_LONG_ERROR = "비밀번호는 20자를 초과할 수 없습니다."
 
 class RegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
-        required=True,
-        validators=[UniqueValidator(queryset=CustomUser.objects.all())]
+        required=True
     )
+
     password = serializers.CharField(
         write_only=True,
         required=True,
@@ -33,6 +33,11 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = ["username", "email", "password", "password2"]
 
+    def validate_email(self, value):
+        if CustomUser.objects.filter(email=value).exists():
+            raise serializers.ValidationError("이메일을 확인하세요.")
+        return value
+    
     def validate_password(self, value):
         # 비밀번호 길이 검증 (최대 20자)
         if len(value) > 20:
