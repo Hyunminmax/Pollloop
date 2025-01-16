@@ -349,6 +349,11 @@ class FormSubmitSerializer(serializers.Serializer):
                         MultipleAnswers.objects.create(user=user, options_of_question=selected_options)
         # 제출자 제출완료로 변경 FormInvitedSerializer 이용
         form_invited_serializer.update(instance=respondent, validated_data={'is_complete':True})
+        complete_count = Respondent.objects.filter(form=form, is_complete=True).count()
+        target_count = Form.objects.filter(uuid=form.uuid).values_list('target_count', flat=True).first()
+        if complete_count == target_count:
+            Form.objects.filter(uuid=form.uuid).update(is_closed="CLOSED")
+
         return form
         
 # 폼 리스트 시리얼라이저
