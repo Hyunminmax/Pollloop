@@ -685,8 +685,12 @@ class FormSendEmailView(APIView):
 
                 try:
                     send_mail(
-                        '폼 참여',
-                        f'폼에 참여하려면 다음 링크를 클릭하세요: {form_url}',
+                        '📝 작성 중인 폼을 제출 완료해 주세요!',
+                        f'안녕하세요!\n'
+                        f'{form.title} 폼에 참여해 주셔서 감사합니다.\n'
+                        f'현재 귀하의 폼 답변이 완료되지 않은 것으로 확인되어 안내드립니다.\n'
+                        f'폼 작성을 완료하여 제출 부탁드립니다.\n'
+                        f'{form_url}',
                         settings.DEFAULT_FROM_EMAIL,
                         emails,
                         fail_silently=False,
